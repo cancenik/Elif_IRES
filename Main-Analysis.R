@@ -1,11 +1,15 @@
 library(edgeR)
-dat = read.csv ('./072314_Elif_comparison_ALLDATA.csv')
+dat = read.csv ('~/elif_ires//072314_Elif_comparison_ALLDATA.csv')
 dat[,-1] = log10(dat[,-1])
+hek_ires = read.csv('~/elif_ires/072214_HEK_allreplicates_deleted_rows.csv')
 
-# test whether mean 
+# test whether mean ratio is the across all cell lines
+# We can use either kruskal-wallis non-parametric or aov for parametric assumption
 cell_type = c("ESC", "ESC", "EB", "EB","EB","EB", "NSC","NSC", "Neuron","Neuron", "Limb", "Limb" ,"Limb" ,"Limb")
 kruskal_pvals = apply ( dat[,-1], 1, function (x) {kruskal.test (as.numeric(x) ~ as.factor(cell_type))$p.value})
+pdf('~/elif_ires/FIGURES/KruskalWallis_pvalHistogram_GenesAcrossTissues.pdf', width=5, height=5)
 hist(kruskal_pvals,20, xlim = c(0,1))
+dev.off()
 length(which(kruskal_pvals < 0.05))
 length(kruskal_pvals)
 # > 255/278
@@ -18,4 +22,6 @@ length(aov_pvals)
 # summary.aov ( a1)
 # TukeyHSD ( a1)
 # boxplot (as.numeric(dat[5,-1]) ~ as.factor(cell_type))
+pdf ('~/elif_ires/FIGURES/MDS_Replicate_similarity_tissues.pdf', width=5, height=5)
 plotMDS(dat[,-1])
+dev.off()
