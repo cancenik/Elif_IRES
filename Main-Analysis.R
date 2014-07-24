@@ -8,6 +8,8 @@ kruskal_pvals = apply ( dat[,-1], 1, function (x) {kruskal.test (as.numeric(x) ~
 hist(kruskal_pvals,20, xlim = c(0,1))
 length(which(kruskal_pvals < 0.05))
 length(kruskal_pvals)
+# > 255/278
+# [1] 0.9172662
 # a1 = aov(as.numeric(dat[5,-1]) ~ as.factor(cell_type))
 aov_pvals = apply ( dat[,-1], 1, function (x) {summary.aov(aov(as.numeric(x) ~ as.factor(cell_type)))[[1]][1,5] } )
 hist(aov_pvals,20, xlim = c(0,1))
