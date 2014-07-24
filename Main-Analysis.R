@@ -35,18 +35,25 @@ dev.off()
 # Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 emcv_hek = as.numeric(hek_ires[251,-1])
 hcv_hek = as.numeric(hek_ires[97, -1])
+prf_hek = as.numeric(hek_ires[250,-1])
 
-test_emcv = function (y){ t.test(emcv_hek, as.numeric(y), alternative="less")$p.value }
+test_emcv = function (y){ t.test( as.numeric(y), emcv_hek, alternative="greater")$p.value }
 emcv_pvalue = apply ( hek_ires[,-1], 1, test_emcv )
 hist ( emcv_pvalue)
 length ( which(emcv_pvalue < .05))
 length(emcv_pvalue )
 # 113 / 279 =  0.4050179
 
-test_hcv = function (y){ t.test(hcv_hek, as.numeric(y), alternative="less")$p.value }
+test_hcv = function (y){ t.test( as.numeric(y), hcv_hek, alternative="greater")$p.value }
 hcv_pvalue =  apply ( hek_ires[,-1], 1, test_hcv )
 hist( hcv_pvalue)
 length( which(hcv_pvalue < .05) )
 length(hcv_pvalue)
-# 75/ 279 = [1] 0.2688172
+# 75/ 279 = [1] 0.2688172 GENE > HCV
+
+test_prf = function (y){ t.test( as.numeric(y), prf_hek, alternative="greater")$p.value }
+prf_pvalue =  apply ( hek_ires[,-1], 1, test_prf )
+hist( prf_pvalue)
+length( which(prf_pvalue < .05) )
+# 275 / 278  ~ .99
 
