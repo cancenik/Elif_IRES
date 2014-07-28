@@ -1,0 +1,162 @@
+GO:0000165	MAPK cascade
+GO:0000975	regulatory region DNA binding
+GO:0000988	protein binding transcription factor activity
+GO:0000989	transcription factor binding transcription factor activity
+GO:0001067	regulatory region nucleic acid binding
+GO:0001071	nucleic acid binding transcription factor activity
+GO:0001501	skeletal system development
+GO:0003002	regionalization
+GO:0003674	molecular_function
+GO:0003676	nucleic acid binding
+GO:0003677	DNA binding
+GO:0003700	sequence-specific DNA binding transcription factor activity
+GO:0003712	transcription cofactor activity
+GO:0005488	binding
+GO:0005515	protein binding
+GO:0005575	cellular_component
+GO:0005622	intracellular
+GO:0005623	cell
+GO:0005634	nucleus
+GO:0006139	nucleobase-containing compound metabolic process
+GO:0006351	transcription, DNA-dependent
+GO:0006355	regulation of transcription, DNA-dependent
+GO:0006357	regulation of transcription from RNA polymerase II promoter
+GO:0006366	transcription from RNA polymerase II promoter
+GO:0006464	cellular protein modification process
+GO:0006725	cellular aromatic compound metabolic process
+GO:0006807	nitrogen compound metabolic process
+GO:0007254	JNK cascade
+GO:0007275	multicellular organismal development
+GO:0007389	pattern specification process
+GO:0007399	nervous system development
+GO:0007417	central nervous system development
+GO:0007610	behavior
+GO:0008150	biological_process
+GO:0008152	metabolic process
+GO:0009058	biosynthetic process
+GO:0009059	macromolecule biosynthetic process
+GO:0009653	anatomical structure morphogenesis
+GO:0009790	embryo development
+GO:0009792	embryo development ending in birth or egg hatching
+GO:0009887	organ morphogenesis
+GO:0009889	regulation of biosynthetic process
+GO:0009890	negative regulation of biosynthetic process
+GO:0009891	positive regulation of biosynthetic process
+GO:0009892	negative regulation of metabolic process
+GO:0009893	positive regulation of metabolic process
+GO:0009966	regulation of signal transduction
+GO:0009967	positive regulation of signal transduction
+GO:0009987	cellular process
+GO:0010467	gene expression
+GO:0010468	regulation of gene expression
+GO:0010556	regulation of macromolecule biosynthetic process
+GO:0010557	positive regulation of macromolecule biosynthetic process
+GO:0010558	negative regulation of macromolecule biosynthetic process
+GO:0010604	positive regulation of macromolecule metabolic process
+GO:0010605	negative regulation of macromolecule metabolic process
+GO:0010628	positive regulation of gene expression
+GO:0010629	negative regulation of gene expression
+GO:0010646	regulation of cell communication
+GO:0010647	positive regulation of cell communication
+GO:0016043	cellular component organization
+GO:0016070	RNA metabolic process
+GO:0016265	death
+GO:0018130	heterocycle biosynthetic process
+GO:0019219	regulation of nucleobase-containing compound metabolic process
+GO:0019222	regulation of metabolic process
+GO:0019438	aromatic compound biosynthetic process
+GO:0021543	pallium development
+GO:0021955	central nervous system neuron axonogenesis
+GO:0022008	neurogenesis
+GO:0023051	regulation of signaling
+GO:0023056	positive regulation of signaling
+GO:0030154	cell differentiation
+GO:0031098	stress-activated protein kinase signaling cascade
+GO:0031323	regulation of cellular metabolic process
+GO:0031324	negative regulation of cellular metabolic process
+GO:0031325	positive regulation of cellular metabolic process
+GO:0031326	regulation of cellular biosynthetic process
+GO:0031327	negative regulation of cellular biosynthetic process
+GO:0031328	positive regulation of cellular biosynthetic process
+GO:0031399	regulation of protein modification process
+GO:0031401	positive regulation of protein modification process
+GO:0032501	multicellular organismal process
+GO:0032502	developmental process
+GO:0032774	RNA biosynthetic process
+GO:0034641	cellular nitrogen compound metabolic process
+GO:0034645	cellular macromolecule biosynthetic process
+GO:0034654	nucleobase-containing compound biosynthetic process
+GO:0035264	multicellular organism growth
+GO:0036211	protein modification process
+GO:0040007	growth
+GO:0043009	chordate embryonic development
+GO:0043170	macromolecule metabolic process
+GO:0043226	organelle
+GO:0043227	membrane-bounded organelle
+GO:0043229	intracellular organelle
+GO:0043231	intracellular membrane-bounded organelle
+GO:0043408	regulation of MAPK cascade
+GO:0043412	macromolecule modification
+GO:0043565	sequence-specific DNA binding
+GO:0044212	transcription regulatory region DNA binding
+GO:0044237	cellular metabolic process
+GO:0044238	primary metabolic process
+GO:0044249	cellular biosynthetic process
+GO:0044260	cellular macromolecule metabolic process
+GO:0044267	cellular protein metabolic process
+GO:0044271	cellular nitrogen compound biosynthetic process
+GO:0044424	intracellular part
+GO:0044464	cell part
+GO:0044699	single-organism process
+GO:0044707	single-multicellular organism process
+GO:0044763	single-organism cellular process
+GO:0044767	single-organism developmental process
+GO:0045595	regulation of cell differentiation
+GO:0045892	negative regulation of transcription, DNA-dependent
+GO:0045893	positive regulation of transcription, DNA-dependent
+GO:0045934	negative regulation of nucleobase-containing compound metabolic process
+GO:0045935	positive regulation of nucleobase-containing compound metabolic process
+GO:0046328	regulation of JNK cascade
+GO:0046483	heterocycle metabolic process
+GO:0048468	cell development
+GO:0048513	organ development
+GO:0048518	positive regulation of biological process
+GO:0048519	negative regulation of biological process
+GO:0048522	positive regulation of cellular process
+GO:0048523	negative regulation of cellular process
+GO:0048583	regulation of response to stimulus
+GO:0048598	embryonic morphogenesis
+GO:0048699	generation of neurons
+GO:0048704	embryonic skeletal system morphogenesis
+GO:0048705	skeletal system morphogenesis
+GO:0048706	embryonic skeletal system development
+GO:0048731	system development
+GO:0048856	anatomical structure development
+GO:0048869	cellular developmental process
+GO:0050789	regulation of biological process
+GO:0050793	regulation of developmental process
+GO:0050794	regulation of cellular process
+GO:0051171	regulation of nitrogen compound metabolic process
+GO:0051172	negative regulation of nitrogen compound metabolic process
+GO:0051173	positive regulation of nitrogen compound metabolic process
+GO:0051239	regulation of multicellular organismal process
+GO:0051252	regulation of RNA metabolic process
+GO:0051253	negative regulation of RNA metabolic process
+GO:0051254	positive regulation of RNA metabolic process
+GO:0051403	stress-activated MAPK cascade
+GO:0060255	regulation of macromolecule metabolic process
+GO:0065007	biological regulation
+GO:0071704	organic substance metabolic process
+GO:0071840	cellular component organization or biogenesis
+GO:0080090	regulation of primary metabolic process
+GO:0090304	nucleic acid metabolic process
+GO:0097159	organic cyclic compound binding
+GO:1901360	organic cyclic compound metabolic process
+GO:1901362	organic cyclic compound biosynthetic process
+GO:1901363	heterocyclic compound binding
+GO:1901576	organic substance biosynthetic process
+GO:2000026	regulation of multicellular organismal development
+GO:2000112	regulation of cellular macromolecule biosynthetic process
+GO:2000113	negative regulation of cellular macromolecule biosynthetic process
+GO:2001141	regulation of RNA biosynthetic process
+
