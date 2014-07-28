@@ -57,3 +57,47 @@ hist( prf_pvalue)
 length( which(prf_pvalue < .05) )
 # 275 / 278  ~ .99
 
+
+stripchart (log10(ratio$ratio), vertical="T", method= "jitter", add = TRUE, at = 0.7))
+
+ires = read.csv('~/Google Drive/barna lab/Experiments/5_UTR_Conservation/Transfection_bicistronic_luciferase /SGI_screen/comparison/042014_comparison_different_cellTypes.csv')
+ires_hek = ires[, 1:2]
+ires_esc = ires[, 3:4]
+ires_limbs = ires[,5:6]
+ires_nsc = ires[,7:8]
+
+ires_comparison1 = merge (ires_hek,ires_esc, by.x="DNA_HEK",by.y= "DNA_mESC")
+
+ires_comparison2 = merge (ires_comparison1,ires_limbs, by.x="DNA_HEK",by.y= "DNA_limbs")
+ires_comparison3 = merge (ires_comparison2,ires_nsc, by.x="DNA_HEK",by.y= "DNA_NSC")
+ires_comparison_final = unique (ires_comparison3, incomparables = FALSE)
+morethanoneoccurence <- duplicated(ires_comparison_final[,1])
+dim(ires_comparison_final[!morethanoneoccurence, ])
+first_selected_ires_comparison = ires_comparison_final[!morethanoneoccurence, ]
+first_selected_ires_comparison [,2]  <- as.numeric (as.character (first_selected_ires_comparison [,2]))
+library (gplots)
+ires.matrix = as.matrix (first_selected_ires_comparison [,2:5])
+#ires.matrix[is.na(ires.matrix)] <- -1
+na.dist <- function(x,...) {
+  t.dist <- dist(x,...)
+  t.dist <- as.matrix(t.dist)
+  t.limit <- 1.1*max(t.dist,na.rm=T)
+  t.dist[is.na(t.dist)] <- t.limit
+  t.dist <- as.dist(t.dist)
+  return(t.dist)
+}
+heatmap.2 (ires.matrix, distfun=na.dist, col=redgreen(75), 
+           density.info="none", dendrogram="row", 
+           scale="row", labRow=F, 
+           trace="none", na.color="blue")
+
+nas = apply ( is.na (ires.matrix),1, any )
+ires.matrix2 = ires.matrix[!nas, ]
+heatmap.2 (ires.matrix2, distfun=na.dist, col=redgreen(75), 
+           density.info="none", dendrogram="none", 
+           labRow = first_selected_ires_comparison[!nas,1],cexRow=.2,
+           scale="row",
+           trace="none", na.color="blue")
+
+cor (ires.matrix2, method = "spearman")
+
