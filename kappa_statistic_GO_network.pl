@@ -65,7 +65,7 @@ while ( <GO_DAG>) {
 	my @F = split; 
 	if ( exists $significant_terms{$F[0]} ) {
 	    foreach (@F) { 
-		if (/ENSG/) { 
+		if (/MGI/) { 
 		    push (@{$go_dag{$F[0]}}, $_);
 		    push (@all, $_); 
 		}

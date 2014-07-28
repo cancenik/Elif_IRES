@@ -103,7 +103,7 @@ cor (ires.matrix2, method = "spearman")
 
 
 ### CALCULATE KAPPA SCORES FOR THE GO TERMS
-go_dag = go_dag_abs8
+go_dag = read.table('~/elif_ires/Elif_DataFiles/0728144_Funcassociate_allMGIIDs_tested.txt_Kappa_Network.sif', header=T)
 # Calculates kappa similarity between two binary vectors 
 calculate_kappa <- function (a1, a2) { 
   Pr_a = sum (!xor(a1,a2)) / length(a1)
