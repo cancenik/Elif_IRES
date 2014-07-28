@@ -101,3 +101,29 @@ heatmap.2 (ires.matrix2, distfun=na.dist, col=redgreen(75),
 
 cor (ires.matrix2, method = "spearman")
 
+
+### CALCULATE KAPPA SCORES FOR THE GO TERMS
+go_dag = go_dag_abs8
+# Calculates kappa similarity between two binary vectors 
+calculate_kappa <- function (a1, a2) { 
+  Pr_a = sum (!xor(a1,a2)) / length(a1)
+  a1_1 = sum(a1) / length(a1)
+  a2_1 = sum(a2) /length(a2)
+  Pr_e = a1_1 * a2_1 + (1-a1_1) * (1-a2_1)
+  kappa = (Pr_a - Pr_e) / (1-Pr_e)
+  return (signif(kappa, 2) ) 
+}
+
+
+first_kappas <- c()
+for ( i in 1:dim(go_dag)[1]) { 
+  for ( j in (i+1):dim(go_dag)[1]) { 
+    first_kappas = c(first_kappas, 
+                     paste(go_dag[i, 1], go_dag[j, 1],
+                           calculate_kappa (go_dag[i, 2:dim(go_dag)[2]], go_dag[j, 2:dim(go_dag)[2]] ), sep="\t"  ) 
+    ) 
+  }
+}
+#write(first_kappas, file = paste(go_dag_joint, "modified", sep="_"))
+
+
