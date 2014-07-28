@@ -1,7 +1,7 @@
 library(edgeR)
-dat = read.csv ('~/elif_ires//072314_Elif_comparison_ALLDATA.csv')
+dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv')
 dat[,-1] = log10(dat[,-1])
-hek_ires = read.csv('~/elif_ires/072214_HEK_allreplicates_deleted_rows.csv')
+hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
 hek_ires[,-1] = log10(hek_ires[,-1])
 
 # test whether mean ratio is the across all cell lines
