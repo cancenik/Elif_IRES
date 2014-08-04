@@ -57,12 +57,14 @@ heatmap.2 (cexCol=.5, as.matrix(Mean.IRES[,-1]), col=redgreen(75),
            density.info="none", dendrogram="none", 
            scale="none", labRow=F, trace="none" )
 
-Mean.IRES_mean = apply (Mean.IRES[,-1], 1 , mean)
-Mean.IRES_centered = Mean.IRES[,-1] - Mean.IRES_mean
-Mean.IRES_centered[,6] = Mean.IRES_mean
+# Mean.IRES_mean = apply (Mean.IRES[,-1], 1 , mean)
+# Mean.IRES_centered = Mean.IRES[,-1] - Mean.IRES_mean
+# Mean.IRES_centered[,6] = Mean.IRES_mean
 
 a1 = apcluster(negDistMat(r=2), as.matrix(Mean.IRES[,-1]))
-a2 = apcluster(negDistMat(r=2), Mean.IRES_centered)
+Mean.IRES[a1@exemplars,]
+heatmap(a1)
+# a2 = apcluster(negDistMat(r=2), Mean.IRES_centered)
 
 
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
