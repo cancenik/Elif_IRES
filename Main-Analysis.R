@@ -1,8 +1,9 @@
 library(edgeR)
+library (gplots)
+library(apcluster)
+
 dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv')
 dat[,-1] = log10(dat[,-1])
-hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
-hek_ires[,-1] = log10(hek_ires[,-1])
 
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
@@ -31,8 +32,43 @@ length(aov_pvals)
 plotMDS(dat[,-1])
 #dev.off()
 
+### Define Tissue specificity of IRES
+# The idea is to calculate ecdf of each cell type
+# Then identify gene entropy; non-uniform distributions will have lower entropy
+Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
+            NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
+            Limb.Mean =  apply (dat[,12:15], 1, mean)
+)
 
-# Test which genes have higher activity than EMCV or HCV in hek_ires dataset
+# DENSITIES
+par (mfrow = c(2,3))
+plot(density(Mean.IRES$ESC.Mean))
+plot(density(Mean.IRES$EB.Mean))
+plotMDS(Mean.IRES[,-1] )
+plot(density(Mean.IRES$NSC.Mean))
+plot(density(Mean.IRES$Neuron.Mean))
+plot(density(Mean.IRES$Limb.Mean))
+
+
+my.ecdf = function(x) {ecdf(x)(x)}
+Mean.IRES[,2:6] = apply(Mean.IRES[,2:6], 2, my.ecdf)
+
+heatmap.2 (cexCol=.5, as.matrix(Mean.IRES[,-1]), col=redgreen(75), 
+           density.info="none", dendrogram="none", 
+           scale="none", labRow=F, trace="none" )
+
+Mean.IRES_mean = apply (Mean.IRES[,-1], 1 , mean)
+Mean.IRES_centered = Mean.IRES[,-1] - Mean.IRES_mean
+Mean.IRES_centered[,6] = Mean.IRES_mean
+
+a1 = apcluster(negDistMat(r=2), as.matrix(Mean.IRES[,-1]))
+a2 = apcluster(negDistMat(r=2), Mean.IRES_centered)
+
+
+######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
+hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
+hek_ires[,-1] = log10(hek_ires[,-1])
+
 emcv_hek = as.numeric(hek_ires[251,-1])
 hcv_hek = as.numeric(hek_ires[97, -1])
 prf_hek = as.numeric(hek_ires[250,-1])
@@ -57,49 +93,7 @@ hist( prf_pvalue)
 length( which(prf_pvalue < .05) )
 # 275 / 278  ~ .99
 
-
-stripchart (log10(ratio$ratio), vertical="T", method= "jitter", add = TRUE, at = 0.7))
-
-ires = read.csv('~/Google Drive/barna lab/Experiments/5_UTR_Conservation/Transfection_bicistronic_luciferase /SGI_screen/comparison/042014_comparison_different_cellTypes.csv')
-ires_hek = ires[, 1:2]
-ires_esc = ires[, 3:4]
-ires_limbs = ires[,5:6]
-ires_nsc = ires[,7:8]
-
-ires_comparison1 = merge (ires_hek,ires_esc, by.x="DNA_HEK",by.y= "DNA_mESC")
-
-ires_comparison2 = merge (ires_comparison1,ires_limbs, by.x="DNA_HEK",by.y= "DNA_limbs")
-ires_comparison3 = merge (ires_comparison2,ires_nsc, by.x="DNA_HEK",by.y= "DNA_NSC")
-ires_comparison_final = unique (ires_comparison3, incomparables = FALSE)
-morethanoneoccurence <- duplicated(ires_comparison_final[,1])
-dim(ires_comparison_final[!morethanoneoccurence, ])
-first_selected_ires_comparison = ires_comparison_final[!morethanoneoccurence, ]
-first_selected_ires_comparison [,2]  <- as.numeric (as.character (first_selected_ires_comparison [,2]))
-library (gplots)
-ires.matrix = as.matrix (first_selected_ires_comparison [,2:5])
-#ires.matrix[is.na(ires.matrix)] <- -1
-na.dist <- function(x,...) {
-  t.dist <- dist(x,...)
-  t.dist <- as.matrix(t.dist)
-  t.limit <- 1.1*max(t.dist,na.rm=T)
-  t.dist[is.na(t.dist)] <- t.limit
-  t.dist <- as.dist(t.dist)
-  return(t.dist)
-}
-heatmap.2 (ires.matrix, distfun=na.dist, col=redgreen(75), 
-           density.info="none", dendrogram="row", 
-           scale="row", labRow=F, 
-           trace="none", na.color="blue")
-
-nas = apply ( is.na (ires.matrix),1, any )
-ires.matrix2 = ires.matrix[!nas, ]
-heatmap.2 (ires.matrix2, distfun=na.dist, col=redgreen(75), 
-           density.info="none", dendrogram="none", 
-           labRow = first_selected_ires_comparison[!nas,1],cexRow=.2,
-           scale="row",
-           trace="none", na.color="blue")
-
-cor (ires.matrix2, method = "spearman")
+stripchart (apply(hek_ires[,-1],1,mean), vertical="T", method= "jitter")
 
 
 ### CALCULATE KAPPA SCORES FOR THE GO TERMS
@@ -124,6 +118,26 @@ for ( i in 1:dim(go_dag)[1]) {
     ) 
   }
 }
+
+# i = 4 ; j=199 ==> Last calculated j =198
+save (first_kappas, file="first_kappas_i4_j198")
+load (file="first_kappas_i4_j198")
 #write(first_kappas, file = paste(go_dag_joint, "modified", sep="_"))
+
+
+
+
+### OLD PLOS, charts, functions
+na.dist <- function(x,...) {
+  t.dist <- dist(x,...)
+  t.dist <- as.matrix(t.dist)
+  t.limit <- 1.1*max(t.dist,na.rm=T)
+  t.dist[is.na(t.dist)] <- t.limit
+  t.dist <- as.dist(t.dist)
+  return(t.dist)
+}
+
+
+
 
 
