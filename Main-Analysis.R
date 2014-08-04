@@ -12,6 +12,7 @@ kruskal_pvals = apply ( dat[,-1], 1, function (x) {kruskal.test (as.numeric(x) ~
 #pdf('~/elif_ires/FIGURES/KruskalWallis_pvalHistogram_GenesAcrossTissues.pdf', width=5, height=5)
 hist(kruskal_pvals,20, xlim = c(0,1))
 #dev.off()
+length(which ( p.adjust (kruskal_pvals, method= "fdr" ) < .05 ))
 length(which(kruskal_pvals < 0.05))
 length(kruskal_pvals)
 # > 255/278
@@ -41,32 +42,53 @@ Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.M
 )
 
 # DENSITIES
+#pdf ('~/elif_ires/FIGURES/density_plot_replicate_similaritytissues.pdf', width=5, height=5)
+par ( las = 2)
 par (mfrow = c(2,3))
-plot(density(Mean.IRES$ESC.Mean))
-plot(density(Mean.IRES$EB.Mean))
-plotMDS(Mean.IRES[,-1] )
-plot(density(Mean.IRES$NSC.Mean))
-plot(density(Mean.IRES$Neuron.Mean))
-plot(density(Mean.IRES$Limb.Mean))
+plot(density(Mean.IRES$ESC.Mean), main = "ESC")
+abline (v = log10(2.632078441), col = "red" )
+abline ( v  = log10 (3.248532641), col = "blue")
+plot(density(Mean.IRES$EB.Mean), main = "EB")
+abline (v = log10(0.513328505), col = "red" )
+abline ( v  = log10 (0.912015486), col = "blue")
+plotMDS(dat[,-1])
+plot(density(Mean.IRES$NSC.Mean), main = "NSC")
+abline (v = log10(1.223226573), col = "red" )
+abline ( v  = log10 (1.094450531), col = "blue")
+plot(density(Mean.IRES$Neuron.Mean), main = "Neuron")
+abline (v = log10(1.142736044), col = "red" )
+abline ( v  = log10 (2.827249104), col = "blue")
+plot(density(Mean.IRES$Limb.Mean), main = "Mesenchyme")
+abline (v = log10(3.38589839), col = "red" )
+abline ( v  = log10 (4.07622128), col = "blue")
+#dev.off()
 
 
 my.ecdf = function(x) {ecdf(x)(x)}
 Mean.IRES[,2:6] = apply(Mean.IRES[,2:6], 2, my.ecdf)
 
+pdf ('~/elif_ires/FIGURES/heatmap_tissues_rankscore_normalized.pdf', width=5, height=5)
 heatmap.2 (cexCol=.5, as.matrix(Mean.IRES[,-1]), col=redgreen(75), 
            density.info="none", dendrogram="none", 
            scale="none", labRow=F, trace="none" )
-
+dev.off()
 # Mean.IRES_mean = apply (Mean.IRES[,-1], 1 , mean)
 # Mean.IRES_centered = Mean.IRES[,-1] - Mean.IRES_mean
 # Mean.IRES_centered[,6] = Mean.IRES_mean
 
+
 a1 = apcluster(negDistMat(r=2), as.matrix(Mean.IRES[,-1]))
 Mean.IRES[a1@exemplars,]
+pdf ('~/elif_ires/FIGURES/affinity_propogationclustering_heatmap.pdf', width=5, height=5)
 heatmap(a1)
+dev.off()
+#plot(a1 , as.matrix(Mean.IRES[,-1]))
 # a2 = apcluster(negDistMat(r=2), Mean.IRES_centered)
 
-
+for ( i in 1: length ( a1@clusters))  { 
+  write.csv ( Mean.IRES[a1@clusters[[i]], ] , row.names = F, 
+                file = paste ("~/elif_ires/APCLUSTERS/Genes_inCluster_", i, ".xls", sep = "" ) )
+}
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
 hek_ires[,-1] = log10(hek_ires[,-1])
