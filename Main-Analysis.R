@@ -1,9 +1,12 @@
 library(edgeR)
 library (gplots)
 library(apcluster)
+library(hash)
 
-dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv')
+dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
 dat[,-1] = log10(dat[,-1])
+dat[,1] = toupper(dat[,1])
+
 
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
@@ -89,6 +92,33 @@ for ( i in 1: length ( a1@clusters))  {
   write.csv ( Mean.IRES[a1@clusters[[i]], ] , row.names = F, 
                 file = paste ("~/elif_ires/APCLUSTERS/Genes_inCluster_", i, ".xls", sep = "" ) )
 }
+
+### CALCULATE MEDIAN IRES FROM THE MEANS
+go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
+GO = hash()
+# LAST LINE IS EMPTY
+# 4174 GO terms has at least one gene
+for (line in go_dag) {
+  lineelements = unlist(strsplit(line,split="\t")[[1]])
+  GOterm = lineelements[1]
+  Genes  = unlist(strsplit(lineelements[3],split=" ")[[1]])
+  genes_of_interest = intersect(Genes , dat[,1])
+  if (length (genes_of_interest) ) {
+    GO[[GOterm]] = genes_of_interest
+  }
+}
+
+GO_ids = c()
+GO_medians = matrix (nrow = length(GO), ncol = 5)
+colnames(GO_medians) = c("ESC.Median", "EB.Median", "NSC.Median", "Neuron.Median", "Limb.Median" )
+i = 1
+for (key in keys(GO)) {
+  GO_medians[i, ] = apply(Mean.IRES[Mean.IRES[,1] %in% GO[[key]],-1] , 2, median)
+  GO_ids= c(GO_ids, key)
+  i = i+ 1
+}
+
+
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
 hek_ires[,-1] = log10(hek_ires[,-1])
