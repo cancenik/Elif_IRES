@@ -97,7 +97,8 @@ for ( i in 1: length ( a1@clusters))  {
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
 # LAST LINE IS EMPTY
-# 4174 GO terms has at least one gene
+# 4012 GO terms has at least one gene
+# More than 2; 1680
 for (line in go_dag) {
   lineelements = unlist(strsplit(line,split="\t")[[1]])
   GOterm = lineelements[1]
@@ -112,12 +113,17 @@ GO_ids = c()
 GO_medians = matrix (nrow = length(GO), ncol = 5)
 colnames(GO_medians) = c("ESC.Median", "EB.Median", "NSC.Median", "Neuron.Median", "Limb.Median" )
 i = 1
+number_of_genes = c()
 for (key in keys(GO)) {
-  GO_medians[i, ] = apply(Mean.IRES[Mean.IRES[,1] %in% GO[[key]],-1] , 2, median)
-  GO_ids= c(GO_ids, key)
+  if (length(GO[[key]]) > 2) {
+    number_of_genes = c(number_of_genes, length(GO[[key]]))  
+    GO_medians[i, ] = apply(Mean.IRES[Mean.IRES[,1] %in% GO[[key]],-1] , 2, median)
+    GO_ids= c(GO_ids, key)
   i = i+ 1
+  }
 }
-
+hist(number_of_genes)
+quantile(number_of_genes, seq(0,1,.05))
 
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
