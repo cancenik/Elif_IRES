@@ -7,6 +7,10 @@ dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',
 dat[,-1] = log10(dat[,-1])
 dat[,1] = toupper(dat[,1])
 
+Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
+                       NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
+                       Limb.Mean =  apply (dat[,12:15], 1, mean)
+)
 
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
@@ -39,10 +43,6 @@ plotMDS(dat[,-1])
 ### Define Tissue specificity of IRES
 # The idea is to calculate ecdf of each cell type
 # Then identify gene entropy; non-uniform distributions will have lower entropy
-Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
-            NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
-            Limb.Mean =  apply (dat[,12:15], 1, mean)
-)
 
 # DENSITIES
 #pdf ('~/elif_ires/FIGURES/density_plot_replicate_similaritytissues.pdf', width=5, height=5)
@@ -96,6 +96,7 @@ for ( i in 1: length ( a1@clusters))  {
 ### CALCULATE MEDIAN IRES FROM THE MEANS
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
+GO_full = hash()
 # LAST LINE IS EMPTY
 # 4012 GO terms has at least one gene
 # More than 2; 1680
@@ -106,6 +107,7 @@ for (line in go_dag) {
   genes_of_interest = intersect(Genes , dat[,1])
   if (length (genes_of_interest) ) {
     GO[[GOterm]] = genes_of_interest
+    GO_full[[GOterm]] = lineelements[2]
   }
 }
 
@@ -115,15 +117,39 @@ colnames(GO_medians) = c("ESC.Median", "EB.Median", "NSC.Median", "Neuron.Median
 i = 1
 number_of_genes = c()
 for (key in keys(GO)) {
-  if (length(GO[[key]]) > 2) {
+  if (length(GO[[key]]) > 4 && length(GO[[key]]) < 110) {
     number_of_genes = c(number_of_genes, length(GO[[key]]))  
     GO_medians[i, ] = apply(Mean.IRES[Mean.IRES[,1] %in% GO[[key]],-1] , 2, median)
     GO_ids= c(GO_ids, key)
   i = i+ 1
   }
 }
-hist(number_of_genes)
+hist(number_of_genes, 50)
 quantile(number_of_genes, seq(0,1,.05))
+# Cluster GO categories by median
+emcv_all = Mean.IRES[252,]
+GO_medians = GO_medians[1:length(number_of_genes),]
+compare_to_emcv = function (x)  {
+  emcv_comp = x > emcv_all[-1]
+  if (any(emcv_comp)) {
+    return (TRUE)
+  }
+  else {
+    return (FALSE)
+  }
+}
+emcv_atleast_one = apply(GO_medians,1,compare_to_emcv)
+
+a2 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one,], q= .25)
+GO_medians[emcv_atleast_one,][a2@exemplars,]
+for (i in GO_ids[emcv_atleast_one][a2@exemplars]) {
+  
+}
+GO_ids[emcv_atleast_one][a2@exemplars]
+# four = c(96, 149, 233, 324, 372, 442, 703)
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one,], col=redgreen(75), 
+           density.info="none", dendrogram="none", 
+           scale="none", labRow=F, trace="none" )
 
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
