@@ -143,9 +143,8 @@ emcv_atleast_one = apply(GO_medians,1,compare_to_emcv)
 a2 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one,], q= .25)
 GO_medians[emcv_atleast_one,][a2@exemplars,]
 for (i in GO_ids[emcv_atleast_one][a2@exemplars]) {
-  
+  print(GO_full[[i]])
 }
-GO_ids[emcv_atleast_one][a2@exemplars]
 # four = c(96, 149, 233, 324, 372, 442, 703)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one,], col=redgreen(75), 
            density.info="none", dendrogram="none", 
