@@ -2,15 +2,33 @@ library(edgeR)
 library (gplots)
 library(apcluster)
 library(hash)
+library(xlsx)
+firefly = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="firefly")
+renilla = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="renilla")
+colnames(firefly)
+colnames(renilla)
+firefly[,1] = toupper(firefly[,1])
+renilla[,1] = toupper(renilla[,1])
+
 
 dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
 dat[,-1] = log10(dat[,-1])
 dat[,1] = toupper(dat[,1])
-
 Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
                        NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
                        Limb.Mean =  apply (dat[,12:15], 1, mean)
 )
+
+## REmove renilla < 200 from both data sets
+# check missing values are overlapping
+a2 = which (firefly[,-1] == -1)
+a1 = which(renilla[,-1] ==-1)
+setdiff(a1,a2)
+
+renilla_threshold = 300 
+length ( which ( renilla[,-1] == -1  ) ) / (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
+length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
+
 
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
