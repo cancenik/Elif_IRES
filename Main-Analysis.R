@@ -10,14 +10,17 @@ colnames(firefly)
 colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
+#write.csv (file ="~/Desktop/ElifFirefly.csv", firefly,row.names=F )
+#write.csv (file ="~/Desktop/ElifRenilla.csv", renilla,row.names=F )
 
-dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
-dat[,-1] = log10(dat[,-1])
-dat[,1] = toupper(dat[,1])
-Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
-                       NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
-                       Limb.Mean =  apply (dat[,12:15], 1, mean)
-)
+
+# dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
+# dat[,-1] = log10(dat[,-1])
+# dat[,1] = toupper(dat[,1])
+# Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
+#                        NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
+#                        Limb.Mean =  apply (dat[,12:15], 1, mean)
+# )
 
 ## REmove renilla < 300 from both data sets
 # check missing values are overlapping
@@ -25,17 +28,17 @@ a2 = which (firefly[,-1] == -1)
 a1 = which(renilla[,-1] ==-1)
 setdiff(a1,a2)
 
-renilla_threshold = 300 
+renilla_threshold = 200 
 length ( which ( renilla[,-1] == -1  ) ) / (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 
 # Based on http://nar.oxfordjournals.org/content/32/20/e160.full#disp-formula-2
 # we define outliers as 
-outlier_detect<- function(r) {
-  range = c(median(r, na.rm=T) + 1.5*IQR(r, na.rm=T), median(r, na.rm=T) - 1.5*IQR(r, na.rm=T))
-  outliers= !(r > range[1] | r < range[2])
-  return(outliers)
-}
+# outlier_detect<- function(r) {
+#   range = c(median(r, na.rm=T) + 1.5*IQR(r, na.rm=T), median(r, na.rm=T) - 1.5*IQR(r, na.rm=T))
+#   outliers= !(r > range[1] | r < range[2])
+#   return(outliers)
+# }
 
 firefly[,-1] [renilla[, -1 ] < renilla_threshold] = NA
 renilla[,-1] [renilla[, -1 ] < renilla_threshold] = NA
@@ -47,17 +50,20 @@ for ( i in 1: nrow(ratios)) {
   }
 }
 colnames(ratios) = colnames(firefly)[-1]
-allcors = cor ( ratios, method = "spearman", use = "pairwise.complete.obs")
+allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
-plot(hclust(distance, method="ward"))
+plot(hclust(distance, method="complete"))
 
-a1 = apply (eb_ratios, 1, outlier_detect)
+colSums(is.na(ratios)) / 288
+
+# Decided remove two replicates from Neuron because of clusterin 3-4;
+# NSC1-2 > 45% NA so removed
 
 Mean_ratios = data.frame(ID = renilla[,1], 
                          ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
-                         NSC.Mean = log10(apply (ratios[,5:12], 1, mean, na.rm=T) ), 
-                         NEU.Mean =  log10(apply (ratios[,13:18], 1, mean, na.rm=T) ), 
+                         NSC.Mean = log10(apply (ratios[,7:12], 1, mean, na.rm=T) ), 
+                         NEU.Mean =  log10(apply (ratios[,c(13,16:18)], 1, mean, na.rm=T) ), 
                          ML.Mean =  log10(apply (ratios[,19:23], 1, mean, na.rm=T) ),
                          EB.Mean =  log10(apply (ratios[,24:27], 1, mean, na.rm=T) )
 )
@@ -67,19 +73,19 @@ Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
 par ( las = 1)
 par (mfrow = c(2,3))
 plot(density(Mean_ratios_complete$ESC.Mean), main = "ESC")
-abline (v = Mean_ratios_complete$ESC.Mean[226], col = "red" )
+abline (v = Mean_ratios_complete$ESC.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$ESC.Mean[2], col = "blue")
 plot(density(Mean_ratios_complete$EB.Mean), main = "EB")
-abline (v = Mean_ratios_complete$EB.Mean[226], col = "red" )
+abline (v = Mean_ratios_complete$EB.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$EB.Mean[2], col = "blue")
 plot(density(Mean_ratios_complete$NSC.Mean), main = "NSC")
-abline (v = Mean_ratios_complete$NSC.Mean[226], col = "red" )
+abline (v = Mean_ratios_complete$NSC.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$NSC.Mean[2], col = "blue")
 plot(density(Mean_ratios_complete$NEU.Mean), main = "Neuron")
-abline (v = Mean_ratios_complete$NEU.Mean[226], col = "red" )
+abline (v = Mean_ratios_complete$NEU.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$NEU.Mean[2], col = "blue")
 plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
-abline (v = Mean_ratios_complete$ML.Mean[226], col = "red" )
+abline (v = Mean_ratios_complete$ML.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
 
 my.ecdf = function(x) {ecdf(x)(x)}
@@ -108,6 +114,7 @@ GO_medians = matrix (nrow = length(GO), ncol = 5)
 colnames(GO_medians) = c("ESC.Median",  "NSC.Median", "NEU.Median", "ML.Median","EB.Median" )
 i = 1
 number_of_genes = c()
+# Test categories for difference using all genes in addition to taking media
 for (key in keys(GO)) {
   if (length(GO[[key]]) > 3 && length(GO[[key]]) < 110) {
     number_of_genes = c(number_of_genes, length(GO[[key]]))  
@@ -119,7 +126,7 @@ for (key in keys(GO)) {
 hist(number_of_genes, 50)
 quantile(number_of_genes, seq(0,1,.05))
 # Cluster GO categories by median
-emcv_all = Mean_ratios_complete[226,]
+emcv_all = Mean_ratios_complete[228,]
 GO_medians = GO_medians[1:length(number_of_genes),]
 compare_to_emcv = function (x)  {
   emcv_comp = x > emcv_all[-1]
