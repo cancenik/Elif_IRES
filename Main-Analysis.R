@@ -162,12 +162,22 @@ for (i in GO_ids[emcv_atleast_one_logical]) {
   full_names = c(full_names, GO_full[[i]])
 }
 
-pdf('~/elif_ires/FIGURES/082314_celltype_GO.pdf', width=10, height=10)
+pdf('~/elif_ires/FIGURES/082314_celltype_GO.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
                 density.info="none", dendrogram="none", 
-                scale="none", labRow=full_names, trace="none", cexRow =.1 )
+                scale="none", labRow=full_names, trace="none", cexRow =.2 )
 dev.off()
 
+# pdf('~/elif_ires/FIGURES/082314_celltype_GO_10genes.pdf', width=8, height=8)
+# h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
+#                 density.info="none", dendrogram="none", 
+#                 scale="none", labRow=full_names, trace="none", cexRow =.25 )
+# dev.off()
+pdf('~/elif_ires/FIGURES/082314_celltype_GO_HighCV.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][t3,], col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", labRow=full_names, trace="none", cexRow =.2 )
+dev.off()
 
 ########## OLD DATA
 # test whether mean ratio is the across all cell lines
