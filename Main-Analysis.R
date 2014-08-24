@@ -32,7 +32,7 @@ length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *di
 # Based on http://nar.oxfordjournals.org/content/32/20/e160.full#disp-formula-2
 # we define outliers as 
 outlier_detect<- function(r) {
-  range = c(median(r) + 1.5*IQR(r), median(r) - 1.5*IQR(r))
+  range = c(median(r, na.rm=T) + 1.5*IQR(r, na.rm=T), median(r, na.rm=T) - 1.5*IQR(r, na.rm=T))
   outliers= !(r > range[1] | r < range[2])
   return(outliers)
 }
@@ -47,8 +47,12 @@ for ( i in 1: nrow(ratios)) {
   }
 }
 colnames(ratios) = colnames(firefly)[-1]
-cor ( ratios, method = "spearman", use = "complete.obs")
+allcors = cor ( ratios, method = "spearman", use = "pairwise.complete.obs")
+dissimilarity <- 1 - cor(allcors)
+distance <- as.dist(dissimilarity)
+plot(hclust(distance, method="ward"))
 
+a1 = apply (eb_ratios, 1, outlier_detect)
 
 Mean_ratios = data.frame(ID = renilla[,1], 
                          ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
