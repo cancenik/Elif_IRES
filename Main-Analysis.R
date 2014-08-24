@@ -110,12 +110,13 @@ emcv_at_least_one = apply(Mean_ratios_complete[,-1],1,compare_to_emcv)
 sum(emcv_at_least_one)
 
 cv_ratios <- apply (Mean_ratios_complete[emcv_at_least_one,-1], 1 , function(x){sd(x)/ mean(x)})
-cv.25 = which(cv_ratios > .25)
+cv.25 = which(cv_ratios > .1)
 plot (rowSums(Mean_ratios_complete[emcv_at_least_one,-1])/5 , cv_ratios)
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_CV.1.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1][cv.25,] ), col=redgreen(75), 
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,][cv.25,1], trace="none", cexRow =.5 )
-
+dev.off()
 ### CALCULATE MEDIAN IRES FROM THE MEANS
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
