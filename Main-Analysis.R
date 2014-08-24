@@ -178,12 +178,30 @@ dev.off()
 
 cv <- apply (GO_medians[emcv_atleast_one_logical,], 1 , function(x){sd(x)/ mean(x)})
 plot(rowSums(GO_medians[emcv_atleast_one_logical,])/5 , cv )
-which(cv > .1)
-pdf('~/elif_ires/FIGURES/082314_celltype_GO_HighCV.pdf', width=8, height=8)
-h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][t3,], col=redgreen(75), 
-                density.info="none", dendrogram="none", 
+cv_1 = which(cv > .1)
+pdf('~/elif_ires/FIGURES/082314_celltype_GO_CV.1.pdf', width=8, height=6)
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][cv_1,], col=redgreen(75), 
+                density.info="none", dendrogram="row", 
                 scale="none", labRow=full_names, trace="none", cexRow =.2 )
 dev.off()
+
+a3 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one_logical,][cv_1,])
+GO_medians[emcv_atleast_one_logical,][a3@exemplars,]
+for (i in GO_ids[emcv_atleast_one_logical][a3@exemplars]) {
+  print(GO_full[[i]])
+}
+
+for (i in 1:length(a3@clusters)) {
+  print(paste ("Cluster" , i, sep="_" ) )
+  for (j in GO_ids[emcv_atleast_one_logical][a3@clusters[[i]] ] ) {
+    print (GO_full[[j]] )
+  }
+  for (k in  a3@clusters[[i]] ) {
+    print (GO_medians[emcv_atleast_one_logical,][k,])
+  }
+}
+
+
 
 ########## OLD DATA
 # test whether mean ratio is the across all cell lines
