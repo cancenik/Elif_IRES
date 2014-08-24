@@ -53,8 +53,9 @@ colnames(ratios) = colnames(firefly)[-1]
 allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
+pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
 plot(hclust(distance, method="complete"))
-
+dev.off()
 colSums(is.na(ratios)) / 288
 
 # Decided remove two replicates from Neuron because of clusterin 3-4;
@@ -69,6 +70,7 @@ Mean_ratios = data.frame(ID = renilla[,1],
 )
 quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
 Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
+dim (Mean_ratios_complete )
 
 par ( las = 1)
 par (mfrow = c(2,3))
@@ -173,6 +175,10 @@ dev.off()
 #                 density.info="none", dendrogram="none", 
 #                 scale="none", labRow=full_names, trace="none", cexRow =.25 )
 # dev.off()
+
+cv <- apply (GO_medians[emcv_atleast_one_logical,], 1 , function(x){sd(x)/ mean(x)})
+plot(rowSums(GO_medians[emcv_atleast_one_logical,])/5 , cv )
+which(cv > .1)
 pdf('~/elif_ires/FIGURES/082314_celltype_GO_HighCV.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][t3,], col=redgreen(75), 
                 density.info="none", dendrogram="none", 
