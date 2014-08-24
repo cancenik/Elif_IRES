@@ -11,7 +11,6 @@ colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
 
-
 dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
 dat[,-1] = log10(dat[,-1])
 dat[,1] = toupper(dat[,1])
@@ -38,6 +37,128 @@ outlier_detect<- function(r) {
   return(outliers)
 }
 
+firefly[,-1] [renilla[, -1 ] < renilla_threshold] = NA
+renilla[,-1] [renilla[, -1 ] < renilla_threshold] = NA
+
+ratios = matrix (nrow = dim (renilla[,-1])[1], ncol = dim (renilla[,-1])[2] )
+for ( i in 1: nrow(ratios)) { 
+  for ( j in 1:ncol(ratios)){ 
+    ratios[i,j]  = firefly[,-1][i,j] / renilla[,-1][i,j]
+  }
+}
+colnames(ratios) = colnames(firefly)[-1]
+cor ( ratios, method = "spearman", use = "complete.obs")
+
+
+Mean_ratios = data.frame(ID = renilla[,1], 
+                         ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
+                         NSC.Mean = log10(apply (ratios[,5:12], 1, mean, na.rm=T) ), 
+                         NEU.Mean =  log10(apply (ratios[,13:18], 1, mean, na.rm=T) ), 
+                         ML.Mean =  log10(apply (ratios[,19:23], 1, mean, na.rm=T) ),
+                         EB.Mean =  log10(apply (ratios[,24:27], 1, mean, na.rm=T) )
+)
+quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
+Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
+
+par ( las = 1)
+par (mfrow = c(2,3))
+plot(density(Mean_ratios_complete$ESC.Mean), main = "ESC")
+abline (v = Mean_ratios_complete$ESC.Mean[226], col = "red" )
+abline ( v  = Mean_ratios_complete$ESC.Mean[2], col = "blue")
+plot(density(Mean_ratios_complete$EB.Mean), main = "EB")
+abline (v = Mean_ratios_complete$EB.Mean[226], col = "red" )
+abline ( v  = Mean_ratios_complete$EB.Mean[2], col = "blue")
+plot(density(Mean_ratios_complete$NSC.Mean), main = "NSC")
+abline (v = Mean_ratios_complete$NSC.Mean[226], col = "red" )
+abline ( v  = Mean_ratios_complete$NSC.Mean[2], col = "blue")
+plot(density(Mean_ratios_complete$NEU.Mean), main = "Neuron")
+abline (v = Mean_ratios_complete$NEU.Mean[226], col = "red" )
+abline ( v  = Mean_ratios_complete$NEU.Mean[2], col = "blue")
+plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
+abline (v = Mean_ratios_complete$ML.Mean[226], col = "red" )
+abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
+
+my.ecdf = function(x) {ecdf(x)(x)}
+Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+
+### CALCULATE MEDIAN IRES FROM THE MEANS
+go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
+GO = hash()
+GO_full = hash()
+# LAST LINE IS EMPTY
+# 3910 GO terms has at least one gene
+# More than 2; 1680
+for (line in go_dag) {
+  lineelements = unlist(strsplit(line,split="\t")[[1]])
+  GOterm = lineelements[1]
+  Genes  = unlist(strsplit(lineelements[3],split=" ")[[1]])
+  genes_of_interest = intersect(Genes , Mean_ratios_complete[,1])
+  if (length (genes_of_interest) ) {
+    GO[[GOterm]] = genes_of_interest
+    GO_full[[GOterm]] = lineelements[2]
+  }
+}
+
+GO_ids = c()
+GO_medians = matrix (nrow = length(GO), ncol = 5)
+colnames(GO_medians) = c("ESC.Median",  "NSC.Median", "NEU.Median", "ML.Median","EB.Median" )
+i = 1
+number_of_genes = c()
+for (key in keys(GO)) {
+  if (length(GO[[key]]) > 3 && length(GO[[key]]) < 110) {
+    number_of_genes = c(number_of_genes, length(GO[[key]]))  
+    GO_medians[i, ] = apply(Mean_ratios_complete[Mean_ratios_complete[,1] %in% GO[[key]],-1] , 2, median)
+    GO_ids= c(GO_ids, key)
+    i = i+ 1
+  }
+}
+hist(number_of_genes, 50)
+quantile(number_of_genes, seq(0,1,.05))
+# Cluster GO categories by median
+emcv_all = Mean_ratios_complete[226,]
+GO_medians = GO_medians[1:length(number_of_genes),]
+compare_to_emcv = function (x)  {
+  emcv_comp = x > emcv_all[-1]
+  if (any(emcv_comp)) {
+    return (TRUE)
+  }
+  else {
+    return (FALSE)
+  }
+}
+emcv_atleast_one_logical = apply(GO_medians,1,compare_to_emcv)
+sum(emcv_atleast_one_logical)
+GO_medians[emcv_atleast_one_logical,]
+
+a2 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one_logical,])
+GO_medians[emcv_atleast_one_logical,][a2@exemplars,]
+for (i in GO_ids[emcv_atleast_one_logical][a2@exemplars]) {
+  print(GO_full[[i]])
+}
+
+for (i in 1:length(a2@clusters)) {
+  print(paste ("Cluster" , i, sep="_" ) )
+  for (j in GO_ids[emcv_atleast_one_logical][a2@clusters[[i]] ] ) {
+    print (GO_full[[j]] )
+  }
+  for (k in  a2@clusters[[i]] ) {
+    print (GO_medians[emcv_atleast_one_logical,][k,])
+  }
+}
+
+full_names = c()
+for (i in GO_ids[emcv_atleast_one_logical]) {
+  full_names = c(full_names, GO_full[[i]])
+}
+
+pdf('~/elif_ires/FIGURES/081314_celltype_GO', width=10, height=10)
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", labRow=full_names, trace="none", cexRow =.1 )
+dev.off()
+
+
+########## OLD DATA
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
 cell_type = c("ESC", "ESC", "EB", "EB","EB","EB", "NSC","NSC", "Neuron","Neuron", "Limb", "Limb" ,"Limb" ,"Limb")
@@ -119,62 +240,7 @@ for ( i in 1: length ( a1@clusters))  {
                 file = paste ("~/elif_ires/APCLUSTERS/Genes_inCluster_", i, ".xls", sep = "" ) )
 }
 
-### CALCULATE MEDIAN IRES FROM THE MEANS
-go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
-GO = hash()
-GO_full = hash()
-# LAST LINE IS EMPTY
-# 4012 GO terms has at least one gene
-# More than 2; 1680
-for (line in go_dag) {
-  lineelements = unlist(strsplit(line,split="\t")[[1]])
-  GOterm = lineelements[1]
-  Genes  = unlist(strsplit(lineelements[3],split=" ")[[1]])
-  genes_of_interest = intersect(Genes , dat[,1])
-  if (length (genes_of_interest) ) {
-    GO[[GOterm]] = genes_of_interest
-    GO_full[[GOterm]] = lineelements[2]
-  }
-}
 
-GO_ids = c()
-GO_medians = matrix (nrow = length(GO), ncol = 5)
-colnames(GO_medians) = c("ESC.Median", "EB.Median", "NSC.Median", "Neuron.Median", "Limb.Median" )
-i = 1
-number_of_genes = c()
-for (key in keys(GO)) {
-  if (length(GO[[key]]) > 4 && length(GO[[key]]) < 110) {
-    number_of_genes = c(number_of_genes, length(GO[[key]]))  
-    GO_medians[i, ] = apply(Mean.IRES[Mean.IRES[,1] %in% GO[[key]],-1] , 2, median)
-    GO_ids= c(GO_ids, key)
-  i = i+ 1
-  }
-}
-hist(number_of_genes, 50)
-quantile(number_of_genes, seq(0,1,.05))
-# Cluster GO categories by median
-emcv_all = Mean.IRES[252,]
-GO_medians = GO_medians[1:length(number_of_genes),]
-compare_to_emcv = function (x)  {
-  emcv_comp = x > emcv_all[-1]
-  if (any(emcv_comp)) {
-    return (TRUE)
-  }
-  else {
-    return (FALSE)
-  }
-}
-emcv_atleast_one = apply(GO_medians,1,compare_to_emcv)
-
-a2 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one,], q= .25)
-GO_medians[emcv_atleast_one,][a2@exemplars,]
-for (i in GO_ids[emcv_atleast_one][a2@exemplars]) {
-  print(GO_full[[i]])
-}
-# four = c(96, 149, 233, 324, 372, 442, 703)
-h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one,], col=redgreen(75), 
-           density.info="none", dendrogram="none", 
-           scale="none", labRow=F, trace="none" )
 
 ######### Test which genes have higher activity than EMCV or HCV in hek_ires dataset
 hek_ires = read.csv('~/elif_ires/Elif_DataFiles/072214_HEK_allreplicates_deleted_rows.csv')
