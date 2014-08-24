@@ -3,6 +3,7 @@ library (gplots)
 library(apcluster)
 library(hash)
 library(xlsx)
+
 firefly = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="firefly")
 renilla = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="renilla")
 colnames(firefly)
@@ -19,7 +20,7 @@ Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.M
                        Limb.Mean =  apply (dat[,12:15], 1, mean)
 )
 
-## REmove renilla < 200 from both data sets
+## REmove renilla < 300 from both data sets
 # check missing values are overlapping
 a2 = which (firefly[,-1] == -1)
 a1 = which(renilla[,-1] ==-1)
@@ -29,6 +30,13 @@ renilla_threshold = 300
 length ( which ( renilla[,-1] == -1  ) ) / (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 
+# Based on http://nar.oxfordjournals.org/content/32/20/e160.full#disp-formula-2
+# we define outliers as 
+outlier_detect<- function(r) {
+  range = c(median(r) + 1.5*IQR(r), median(r) - 1.5*IQR(r))
+  outliers= !(r > range[1] | r < range[2])
+  return(outliers)
+}
 
 # test whether mean ratio is the across all cell lines
 # We can use either kruskal-wallis non-parametric or aov for parametric assumption
