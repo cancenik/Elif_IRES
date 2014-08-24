@@ -10,9 +10,6 @@ colnames(firefly)
 colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
-#write.csv (file ="~/Desktop/ElifFirefly.csv", firefly,row.names=F )
-#write.csv (file ="~/Desktop/ElifRenilla.csv", renilla,row.names=F )
-
 
 # dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
 # dat[,-1] = log10(dat[,-1])
@@ -50,6 +47,11 @@ for ( i in 1: nrow(ratios)) {
   }
 }
 colnames(ratios) = colnames(firefly)[-1]
+
+#write.csv (file ="~/elif_ires/082314_FireflyComparison.csv", firefly,row.names=F )
+#write.csv (file ="~/elif_ires/082314_RenillaComparison.csv", renilla,row.names=F )
+#write.csv (file = "~/elif_ires/082314_ratios.csv", ratios,row.names=F )
+
 allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
@@ -93,6 +95,27 @@ abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
 my.ecdf = function(x) {ecdf(x)(x)}
 Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
 
+emcv_all = Mean_ratios_complete[228,]
+compare_to_emcv = function (x)  {
+  emcv_comp = x > emcv_all[-1]
+  if (any(emcv_comp)) {
+    return (TRUE)
+  }
+  else {
+    return (FALSE)
+  }
+}
+
+emcv_at_least_one = apply(Mean_ratios_complete[,-1],1,compare_to_emcv)
+sum(emcv_at_least_one)
+
+cv_ratios <- apply (Mean_ratios_complete[emcv_at_least_one,-1], 1 , function(x){sd(x)/ mean(x)})
+cv.25 = which(cv_ratios > .25)
+plot (rowSums(Mean_ratios_complete[emcv_at_least_one,-1])/5 , cv_ratios)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1][cv.25,] ), col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,][cv.25,1], trace="none", cexRow =.5 )
+
 ### CALCULATE MEDIAN IRES FROM THE MEANS
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
@@ -128,17 +151,8 @@ for (key in keys(GO)) {
 hist(number_of_genes, 50)
 quantile(number_of_genes, seq(0,1,.05))
 # Cluster GO categories by median
-emcv_all = Mean_ratios_complete[228,]
 GO_medians = GO_medians[1:length(number_of_genes),]
-compare_to_emcv = function (x)  {
-  emcv_comp = x > emcv_all[-1]
-  if (any(emcv_comp)) {
-    return (TRUE)
-  }
-  else {
-    return (FALSE)
-  }
-}
+
 emcv_atleast_one_logical = apply(GO_medians,1,compare_to_emcv)
 sum(emcv_atleast_one_logical)
 GO_medians[emcv_atleast_one_logical,]
@@ -179,10 +193,11 @@ dev.off()
 cv <- apply (GO_medians[emcv_atleast_one_logical,], 1 , function(x){sd(x)/ mean(x)})
 plot(rowSums(GO_medians[emcv_atleast_one_logical,])/5 , cv )
 cv_1 = which(cv > .1)
+
 pdf('~/elif_ires/FIGURES/082314_celltype_GO_CV.1.pdf', width=8, height=6)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][cv_1,], col=redgreen(75), 
                 density.info="none", dendrogram="row", 
-                scale="none", labRow=full_names, trace="none", cexRow =.2 )
+                scale="none", labRow=full_names[cv_1], trace="none", cexRow =.2 )
 dev.off()
 
 a3 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one_logical,][cv_1,])
