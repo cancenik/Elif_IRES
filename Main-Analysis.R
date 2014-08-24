@@ -162,7 +162,7 @@ for (i in GO_ids[emcv_atleast_one_logical]) {
   full_names = c(full_names, GO_full[[i]])
 }
 
-pdf('~/elif_ires/FIGURES/081314_celltype_GO', width=10, height=10)
+pdf('~/elif_ires/FIGURES/082314_celltype_GO.pdf', width=10, height=10)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=full_names, trace="none", cexRow =.1 )
