@@ -105,6 +105,12 @@ h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75),
                 scale="none", trace="none", cexRow =.5 )
 dev.off()
 
+pdf('~/elif_ires/FIGURES/KruskalWallis_Different_GenesFDR10_RowNormalized.pdf', width=6, height=6)
+h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75), 
+                density.info="none", dendrogram="row", 
+                scale="row", trace="none", cexRow =.5 )
+dev.off()
+
 Mean_ratios = data.frame(ID = renilla[,1], 
                          ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
                          NSC.Mean = log10(apply (ratios[,7:12], 1, mean, na.rm=T) ), 
@@ -115,6 +121,7 @@ Mean_ratios = data.frame(ID = renilla[,1],
 quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
 Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
 dim (Mean_ratios_complete )
+
 
 par ( las = 1)
 par (mfrow = c(2,3))
@@ -134,7 +141,13 @@ plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
 abline (v = Mean_ratios_complete$ML.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
 
+pdf('~/elif_ires/FIGURES/IRESDistributios_boxplot.pdf' , height=4, width=20)
+par(las=1)
+par(mfrow=c(1,2))
+boxplot (Mean_ratios_complete[,-1], ylab="log10 IRES")
 Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+boxplot(Mean_ratios_complete[,-1], ylab="RankOrder")
+dev.off()
 
 emcv_all = Mean_ratios_complete[228,]
 compare_to_emcv = function (x)  {
