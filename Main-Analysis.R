@@ -55,13 +55,55 @@ colnames(ratios) = colnames(firefly)[-1]
 allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
-pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
+#pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
 plot(hclust(distance, method="complete"))
-dev.off()
+#dev.off()
 colSums(is.na(ratios)) / 288
 
 # Decided remove two replicates from Neuron because of clusterin 3-4;
 # NSC1-2 > 45% NA so removed
+my.ecdf = function(x) {ecdf(x)(x)}
+
+ratios_refined = ratios[,-c(5,6,14,15)]
+ratios_refined_ranks = apply (ratios_refined , 2, my.ecdf)
+
+IDs = renilla[,1]
+IDs = IDs[rowSums(is.na(ratios_refined_ranks)) < 15]
+
+ratios_refined_ranks = ratios_refined_ranks[rowSums(is.na(ratios_refined_ranks)) < 15, ]
+ratios_cell_types = as.factor(sapply(colnames(ratios_refined), function(x) {substr(x, 1, nchar(x) - 1)}))
+kruskal_pvals_ratios = apply ( ratios_refined_ranks, 1, function (x) {kruskal.test (x ~ ratios_cell_types)$p.value})
+
+hist(kruskal_pvals_ratios,20, xlim = c(0,1))
+variables =  which ( p.adjust (kruskal_pvals_ratios, method= "fdr" ) < .1 )
+length(variables)
+length(which(kruskal_pvals_ratios < 0.05))
+length(kruskal_pvals_ratios)
+variable_ratios = ratios_refined_ranks[variables,]
+variable_IDs = IDs[variables]
+
+variable_means = t(apply (variable_ratios, 1, function(x) {tapply(x, ratios_cell_types, mean, na.rm=T)} ))
+rownames(variable_means) = variable_IDs
+
+emcv_all = tapply(ratios_refined_ranks[234,], ratios_cell_types, mean, na.rm=T)
+#hcv_all = tapply(ratios_refined_ranks[2,], ratios_cell_types, mean, na.rm=T)
+compare_to_ires = function (x)  {
+  emcv_comp = x > emcv_all
+  if (any(emcv_comp)) {
+    return (TRUE)
+  }
+  else {
+    return (FALSE)
+  }
+}
+emcv_at_least_one = apply(variable_means,1,compare_to_emcv)
+sum(emcv_at_least_one)
+
+pdf('~/elif_ires/FIGURES/KruskalWallis_Different_Genes.pdf', width=6, height=6)
+h1 = heatmap.2 (cexCol=.5, variable_means, col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", trace="none", cexRow =.5 )
+dev.off()
 
 Mean_ratios = data.frame(ID = renilla[,1], 
                          ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
@@ -92,7 +134,6 @@ plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
 abline (v = Mean_ratios_complete$ML.Mean[228], col = "red" )
 abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
 
-my.ecdf = function(x) {ecdf(x)(x)}
 Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
 
 emcv_all = Mean_ratios_complete[228,]
