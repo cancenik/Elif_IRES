@@ -87,7 +87,7 @@ rownames(variable_means) = variable_IDs
 
 emcv_all = tapply(ratios_refined_ranks[234,], ratios_cell_types, mean, na.rm=T)
 #hcv_all = tapply(ratios_refined_ranks[2,], ratios_cell_types, mean, na.rm=T)
-compare_to_ires = function (x)  {
+compare_to_emcv = function (x)  {
   emcv_comp = x > emcv_all
   if (any(emcv_comp)) {
     return (TRUE)
@@ -106,7 +106,7 @@ h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75),
 dev.off()
 
 pdf('~/elif_ires/FIGURES/KruskalWallis_Different_GenesFDR10_RowNormalized.pdf', width=6, height=6)
-h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75), 
+h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=colorpanel(75, 'blue3','white', 'red2'), 
                 density.info="none", dendrogram="row", 
                 scale="row", trace="none", cexRow =.5 )
 dev.off()
@@ -171,6 +171,7 @@ h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1][
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,][cv.25,1], trace="none", cexRow =.5 )
 dev.off()
+
 ### CALCULATE MEDIAN IRES FROM THE MEANS
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
@@ -203,6 +204,19 @@ for (key in keys(GO)) {
     i = i+ 1
   }
 }
+
+elif_siggos = readLines('~/elif_ires/Elif_DataFiles/funcassociate_results.tsv')
+GOints = hash()
+# LAST LINE IS EMPTY
+# 3910 GO terms has at least one gene
+# More than 2; 1680
+for (line in elif_siggos) {
+  lineelements = unlist(strsplit(line,split="\t")[[1]])
+  GOterm = lineelements[6]
+  GOints[[GOterm]] =  lineelements[7]
+}
+
+                        
 hist(number_of_genes, 50)
 quantile(number_of_genes, seq(0,1,.05))
 # Cluster GO categories by median
@@ -211,6 +225,17 @@ GO_medians = GO_medians[1:length(number_of_genes),]
 emcv_atleast_one_logical = apply(GO_medians,1,compare_to_emcv)
 sum(emcv_atleast_one_logical)
 GO_medians[emcv_atleast_one_logical,]
+in_sig_categories = c()
+for ( i in GO_ids[emcv_atleast_one_logical]) {
+  if (!is.null(GOints[[i]]) ) {
+    print(GOints[[i]])
+    in_sig_categories = c(in_sig_categories, TRUE)
+  }
+  else {
+    in_sig_categories = c(in_sig_categories, FALSE)
+    
+  }
+}
 
 a2 = apcluster(negDistMat(r=2), GO_medians[emcv_atleast_one_logical,])
 GO_medians[emcv_atleast_one_logical,][a2@exemplars,]
@@ -238,6 +263,11 @@ h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(7
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=full_names, trace="none", cexRow =.2 )
 dev.off()
+
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][in_sig_categories,], col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="row", labRow=full_names[in_sig_categories], trace="none", cexRow =.5 )
+
 
 # pdf('~/elif_ires/FIGURES/082314_celltype_GO_10genes.pdf', width=8, height=8)
 # h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
