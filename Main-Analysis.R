@@ -99,9 +99,9 @@ compare_to_ires = function (x)  {
 emcv_at_least_one = apply(variable_means,1,compare_to_emcv)
 sum(emcv_at_least_one)
 
-pdf('~/elif_ires/FIGURES/KruskalWallis_Different_Genes.pdf', width=6, height=6)
-h1 = heatmap.2 (cexCol=.5, variable_means, col=redgreen(75), 
-                density.info="none", dendrogram="none", 
+pdf('~/elif_ires/FIGURES/KruskalWallis_Different_GenesFDR10.pdf', width=6, height=6)
+h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75), 
+                density.info="none", dendrogram="row", 
                 scale="none", trace="none", cexRow =.5 )
 dev.off()
 
