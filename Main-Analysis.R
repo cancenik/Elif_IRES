@@ -3,6 +3,7 @@ library (gplots)
 library(apcluster)
 library(hash)
 library(xlsx)
+library (plyr)
 
 ## READ INPUT DATAFILES
 firefly = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="firefly")
@@ -11,6 +12,8 @@ colnames(firefly)
 colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
+#firefly = aggregate( firefly[,-1], list(firefly[,1]), mean)
+#renilla = aggregate( renilla[,-1], list(renilla[,1]), mean)
 
 ## REmove renilla < 300 from both data sets
 # check missing values are overlapping
