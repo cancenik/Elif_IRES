@@ -4,6 +4,7 @@ library(apcluster)
 library(hash)
 library(xlsx)
 
+## READ INPUT DATAFILES
 firefly = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="firefly")
 renilla = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="renilla")
 colnames(firefly)
@@ -11,35 +12,20 @@ colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
 
-# dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
-# dat[,-1] = log10(dat[,-1])
-# dat[,1] = toupper(dat[,1])
-# Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
-#                        NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
-#                        Limb.Mean =  apply (dat[,12:15], 1, mean)
-# )
-
 ## REmove renilla < 300 from both data sets
 # check missing values are overlapping
 a2 = which (firefly[,-1] == -1)
 a1 = which(renilla[,-1] ==-1)
 setdiff(a1,a2)
-
 renilla_threshold = 200 
 length ( which ( renilla[,-1] == -1  ) ) / (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
-
-# Based on http://nar.oxfordjournals.org/content/32/20/e160.full#disp-formula-2
-# we define outliers as 
-# outlier_detect<- function(r) {
-#   range = c(median(r, na.rm=T) + 1.5*IQR(r, na.rm=T), median(r, na.rm=T) - 1.5*IQR(r, na.rm=T))
-#   outliers= !(r > range[1] | r < range[2])
-#   return(outliers)
-# }
-
 firefly[,-1] [renilla[, -1 ] < renilla_threshold] = NA
 renilla[,-1] [renilla[, -1 ] < renilla_threshold] = NA
 
+
+
+## CALCULATE RATIOS
 ratios = matrix (nrow = dim (renilla[,-1])[1], ncol = dim (renilla[,-1])[2] )
 for ( i in 1: nrow(ratios)) { 
   for ( j in 1:ncol(ratios)){ 
@@ -52,6 +38,8 @@ colnames(ratios) = colnames(firefly)[-1]
 #write.csv (file ="~/elif_ires/082314_RenillaComparison.csv", renilla,row.names=F )
 #write.csv (file = "~/elif_ires/082314_ratios.csv", ratios,row.names=F )
 
+
+# Calculate REplicate Correlation using ratios and complete obs
 allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
@@ -62,18 +50,23 @@ colSums(is.na(ratios)) / 288
 
 # Decided remove two replicates from Neuron because of clusterin 3-4;
 # NSC1-2 > 45% NA so removed
-my.ecdf = function(x) {ecdf(x)(x)}
 
+# Removes 4 replicates that are weird
 ratios_refined = ratios[,-c(5,6,14,15)]
+
+# Rank convert ratios
+my.ecdf = function(x) {ecdf(x)(x)}
 ratios_refined_ranks = apply (ratios_refined , 2, my.ecdf)
 
 IDs = renilla[,1]
 IDs = IDs[rowSums(is.na(ratios_refined_ranks)) < 15]
 
+# 15 tane veya daha fazla replicateda renilla < 200 az olanlari atiyor
 ratios_refined_ranks = ratios_refined_ranks[rowSums(is.na(ratios_refined_ranks)) < 15, ]
 ratios_cell_types = as.factor(sapply(colnames(ratios_refined), function(x) {substr(x, 1, nchar(x) - 1)}))
-kruskal_pvals_ratios = apply ( ratios_refined_ranks, 1, function (x) {kruskal.test (x ~ ratios_cell_types)$p.value})
 
+# Use kruskal wallis to call significant differences
+kruskal_pvals_ratios = apply ( ratios_refined_ranks, 1, function (x) {kruskal.test (x ~ ratios_cell_types)$p.value})
 hist(kruskal_pvals_ratios,20, xlim = c(0,1))
 variables =  which ( p.adjust (kruskal_pvals_ratios, method= "fdr" ) < .1 )
 length(variables)
@@ -100,7 +93,7 @@ emcv_at_least_one = apply(variable_means,1,compare_to_emcv)
 sum(emcv_at_least_one)
 
 pdf('~/elif_ires/FIGURES/KruskalWallis_Different_GenesFDR10.pdf', width=6, height=6)
-h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=redgreen(75), 
+h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=colorpanel(75, 'blue3','white', 'red2'),, 
                 density.info="none", dendrogram="row", 
                 scale="none", trace="none", cexRow =.5 )
 dev.off()
@@ -111,6 +104,10 @@ h1 = heatmap.2 (cexCol=.5, variable_means[emcv_at_least_one,], col=colorpanel(75
                 scale="row", trace="none", cexRow =.5 )
 dev.off()
 
+
+################## 
+### DIFFERENT SECTION
+# Takes mean of ratios without rank normalization
 Mean_ratios = data.frame(ID = renilla[,1], 
                          ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
                          NSC.Mean = log10(apply (ratios[,7:12], 1, mean, na.rm=T) ), 
@@ -119,10 +116,12 @@ Mean_ratios = data.frame(ID = renilla[,1],
                          EB.Mean =  log10(apply (ratios[,24:27], 1, mean, na.rm=T) )
 )
 quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
+
+# Ensure at least one measurement per cell type
 Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
 dim (Mean_ratios_complete )
 
-
+# Distribution of mean ratios without ranking
 par ( las = 1)
 par (mfrow = c(2,3))
 plot(density(Mean_ratios_complete$ESC.Mean), main = "ESC")
@@ -145,7 +144,10 @@ pdf('~/elif_ires/FIGURES/IRESDistributios_boxplot.pdf' , height=4, width=20)
 par(las=1)
 par(mfrow=c(1,2))
 boxplot (Mean_ratios_complete[,-1], ylab="log10 IRES")
-Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+
+## Uncomment below line to use rank normalized data. 
+### Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+
 boxplot(Mean_ratios_complete[,-1], ylab="RankOrder")
 dev.off()
 
@@ -163,10 +165,40 @@ compare_to_emcv = function (x)  {
 emcv_at_least_one = apply(Mean_ratios_complete[,-1],1,compare_to_emcv)
 sum(emcv_at_least_one)
 
+### Greater than EMCV all genes not normalized
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+dev.off()
+
+### Greater than EMCV all genes row normalized
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+dev.off()
+
+# EMCV Greater, EB removed, row normalized
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)] ), col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+dev.off()
+
+# EMCV Greater, EB removed, no normalized
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_noEB.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)] ), col=redgreen(75), 
+                density.info="none", dendrogram="none", 
+                scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+dev.off()
+
+
+# Calculate CV of mean ratios
 cv_ratios <- apply (Mean_ratios_complete[emcv_at_least_one,-1], 1 , function(x){sd(x)/ mean(x)})
-cv.25 = which(cv_ratios > .1)
+cv.25 = which(cv_ratios > .05)
 plot (rowSums(Mean_ratios_complete[emcv_at_least_one,-1])/5 , cv_ratios)
-pdf('~/elif_ires/FIGURES/082314_celltype_Gene_CV.1.pdf', width=8, height=8)
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_CV.05.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1][cv.25,] ), col=redgreen(75), 
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,][cv.25,1], trace="none", cexRow =.5 )
@@ -184,7 +216,7 @@ for (line in go_dag) {
   GOterm = lineelements[1]
   Genes  = unlist(strsplit(lineelements[3],split=" ")[[1]])
   genes_of_interest = intersect(Genes , Mean_ratios_complete[,1])
-  if (length (genes_of_interest) ) {
+  if (length (genes_of_interest)) {
     GO[[GOterm]] = genes_of_interest
     GO_full[[GOterm]] = lineelements[2]
   }
@@ -204,7 +236,17 @@ for (key in keys(GO)) {
     i = i+ 1
   }
 }
+hist(number_of_genes, 50)
+quantile(number_of_genes, seq(0,1,.05))
+# Cluster GO categories by median
+GO_medians = GO_medians[1:length(number_of_genes),]
 
+emcv_atleast_one_logical = apply(GO_medians,1,compare_to_emcv)
+sum(emcv_atleast_one_logical)
+GO_medians[emcv_atleast_one_logical,]
+
+# 5UTR conservation; FuncAssociate Enrichment
+# Categories are used to intersect the results. 
 elif_siggos = readLines('~/elif_ires/Elif_DataFiles/funcassociate_results.tsv')
 GOints = hash()
 # LAST LINE IS EMPTY
@@ -216,15 +258,6 @@ for (line in elif_siggos) {
   GOints[[GOterm]] =  lineelements[7]
 }
 
-                        
-hist(number_of_genes, 50)
-quantile(number_of_genes, seq(0,1,.05))
-# Cluster GO categories by median
-GO_medians = GO_medians[1:length(number_of_genes),]
-
-emcv_atleast_one_logical = apply(GO_medians,1,compare_to_emcv)
-sum(emcv_atleast_one_logical)
-GO_medians[emcv_atleast_one_logical,]
 in_sig_categories = c()
 for ( i in GO_ids[emcv_atleast_one_logical]) {
   if (!is.null(GOints[[i]]) ) {
@@ -258,10 +291,10 @@ for (i in GO_ids[emcv_atleast_one_logical]) {
   full_names = c(full_names, GO_full[[i]])
 }
 
-pdf('~/elif_ires/FIGURES/082314_celltype_GO.pdf', width=8, height=8)
+pdf('~/elif_ires/FIGURES/082314_celltype_GO_rownormalized2.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
-                density.info="none", dendrogram="none", 
-                scale="none", labRow=full_names, trace="none", cexRow =.2 )
+                density.info="none", dendrogram="row", 
+                scale="row", labRow=full_names, trace="none", cexRow =.2 )
 dev.off()
 
 pdf('~/elif_ires/FIGURES/082314_celltype_enrichedGO_medianIRES.pdf', width=8, height=8)
@@ -269,6 +302,17 @@ h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][in_sig_categori
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=full_names[in_sig_categories], trace="none", cexRow =.2 )
 dev.off()
+pdf('~/elif_ires/FIGURES/082314_celltype_GO_rownormalized_NOEB.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,-5], col=redgreen(75), 
+                density.info="none", dendrogram="row", 
+                scale="row", labRow=full_names, trace="none", cexRow =.2 )
+dev.off()
+
+
+# h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,-5][in_sig_categories,], col=redgreen(75), 
+#                 density.info="none", dendrogram="none", 
+#                 scale="row", labRow=full_names[in_sig_categories], trace="none", cexRow =.5 )
+
 
 # pdf('~/elif_ires/FIGURES/082314_celltype_GO_10genes.pdf', width=8, height=8)
 # h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
@@ -460,7 +504,23 @@ na.dist <- function(x,...) {
   return(t.dist)
 }
 
+##UNUSED
+
+# dat = read.csv ('~/elif_ires/Elif_DataFiles/072314_Elif_comparison_ALLDATA.csv',stringsAsFactors=F)
+# dat[,-1] = log10(dat[,-1])
+# dat[,1] = toupper(dat[,1])
+# Mean.IRES = data.frame(ID = dat[,1], ESC.Mean = apply (dat[,2:3], 1, mean), EB.Mean = apply (dat[,4:7], 1, mean), 
+#                        NSC.Mean =  apply (dat[,8:9], 1, mean), Neuron.Mean =  apply (dat[,10:11], 1, mean),
+#                        Limb.Mean =  apply (dat[,12:15], 1, mean)
+# )
 
 
+# Based on http://nar.oxfordjournals.org/content/32/20/e160.full#disp-formula-2
+# we define outliers as 
+# outlier_detect<- function(r) {
+#   range = c(median(r, na.rm=T) + 1.5*IQR(r, na.rm=T), median(r, na.rm=T) - 1.5*IQR(r, na.rm=T))
+#   outliers= !(r > range[1] | r < range[2])
+#   return(outliers)
+# }
 
 
