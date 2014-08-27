@@ -264,10 +264,11 @@ h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(7
                 scale="none", labRow=full_names, trace="none", cexRow =.2 )
 dev.off()
 
+pdf('~/elif_ires/FIGURES/082314_celltype_enrichedGO_medianIRES.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,][in_sig_categories,], col=redgreen(75), 
                 density.info="none", dendrogram="none", 
-                scale="row", labRow=full_names[in_sig_categories], trace="none", cexRow =.5 )
-
+                scale="none", labRow=full_names[in_sig_categories], trace="none", cexRow =.2 )
+dev.off()
 
 # pdf('~/elif_ires/FIGURES/082314_celltype_GO_10genes.pdf', width=8, height=8)
 # h1 = heatmap.2 (cexCol=.5, GO_medians[emcv_atleast_one_logical,], col=redgreen(75), 
