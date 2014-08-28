@@ -233,6 +233,7 @@ dev.off()
 go_dag = readLines('~/elif_ires/Elif_DataFiles/funcassociate_go_associations_mgisymbol.txt')
 GO = hash()
 GO_full = hash()
+GO_full_to_id = hash()
 # LAST LINE IS EMPTY
 # 3910 GO terms has at least one gene
 # More than 2; 1680
@@ -244,8 +245,13 @@ for (line in go_dag) {
   if (length (genes_of_interest)) {
     GO[[GOterm]] = genes_of_interest
     GO_full[[GOterm]] = lineelements[2]
+    GO_full_to_id[[lineelements[2]]] = GOterm
   }
 }
+
+## Example 
+GO_full_to_id[["nerve development"]]
+GO[["GO:0021675"]]
 
 GO_ids = c()
 GO_medians = matrix (nrow = length(GO), ncol = 5)
