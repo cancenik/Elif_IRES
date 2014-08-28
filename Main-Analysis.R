@@ -3,7 +3,6 @@ library (gplots)
 library(apcluster)
 library(hash)
 library(xlsx)
-library (plyr)
 
 ## READ INPUT DATAFILES
 firefly = read.xlsx(file='Elif_DataFiles/080814_comparison_raw.xlsx', sheetName="firefly")
@@ -12,9 +11,10 @@ colnames(firefly)
 colnames(renilla)
 firefly[,1] = toupper(firefly[,1])
 renilla[,1] = toupper(renilla[,1])
-#firefly = aggregate( firefly[,-1], list(firefly[,1]), mean)
-#renilla = aggregate( renilla[,-1], list(renilla[,1]), mean)
+firefly = aggregate( firefly[,-1], list(firefly[,1]), mean)
+renilla = aggregate( renilla[,-1], list(renilla[,1]), mean)
 
+genes_of_interest = read.table('~/elif_ires/Elif_DataFiles/genes_of_interest.txt', stringsAsFactors=F)
 ## REmove renilla < 300 from both data sets
 # check missing values are overlapping
 a2 = which (firefly[,-1] == -1)
@@ -25,7 +25,6 @@ length ( which ( renilla[,-1] == -1  ) ) / (dim (renilla[,-1])[1] *dim (renilla[
 length ( which ( renilla[,-1] < renilla_threshold ))/ (dim (renilla[,-1])[1] *dim (renilla[,-1])[2])
 firefly[,-1] [renilla[, -1 ] < renilla_threshold] = NA
 renilla[,-1] [renilla[, -1 ] < renilla_threshold] = NA
-
 
 
 ## CALCULATE RATIOS
@@ -81,7 +80,7 @@ variable_IDs = IDs[variables]
 variable_means = t(apply (variable_ratios, 1, function(x) {tapply(x, ratios_cell_types, mean, na.rm=T)} ))
 rownames(variable_means) = variable_IDs
 
-emcv_all = tapply(ratios_refined_ranks[234,], ratios_cell_types, mean, na.rm=T)
+emcv_all = tapply(ratios_refined_ranks[52,], ratios_cell_types, mean, na.rm=T)
 #hcv_all = tapply(ratios_refined_ranks[2,], ratios_cell_types, mean, na.rm=T)
 compare_to_emcv = function (x)  {
   emcv_comp = x > emcv_all
@@ -128,20 +127,20 @@ dim (Mean_ratios_complete )
 par ( las = 1)
 par (mfrow = c(2,3))
 plot(density(Mean_ratios_complete$ESC.Mean), main = "ESC")
-abline (v = Mean_ratios_complete$ESC.Mean[228], col = "red" )
-abline ( v  = Mean_ratios_complete$ESC.Mean[2], col = "blue")
+abline (v = Mean_ratios_complete$ESC.Mean[52], col = "red" )
+abline ( v  = Mean_ratios_complete$ESC.Mean[78], col = "blue")
 plot(density(Mean_ratios_complete$EB.Mean), main = "EB")
-abline (v = Mean_ratios_complete$EB.Mean[228], col = "red" )
-abline ( v  = Mean_ratios_complete$EB.Mean[2], col = "blue")
+abline (v = Mean_ratios_complete$EB.Mean[52], col = "red" )
+abline ( v  = Mean_ratios_complete$EB.Mean[78], col = "blue")
 plot(density(Mean_ratios_complete$NSC.Mean), main = "NSC")
-abline (v = Mean_ratios_complete$NSC.Mean[228], col = "red" )
-abline ( v  = Mean_ratios_complete$NSC.Mean[2], col = "blue")
+abline (v = Mean_ratios_complete$NSC.Mean[52], col = "red" )
+abline ( v  = Mean_ratios_complete$NSC.Mean[78], col = "blue")
 plot(density(Mean_ratios_complete$NEU.Mean), main = "Neuron")
-abline (v = Mean_ratios_complete$NEU.Mean[228], col = "red" )
-abline ( v  = Mean_ratios_complete$NEU.Mean[2], col = "blue")
+abline (v = Mean_ratios_complete$NEU.Mean[52], col = "red" )
+abline ( v  = Mean_ratios_complete$NEU.Mean[78], col = "blue")
 plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
-abline (v = Mean_ratios_complete$ML.Mean[228], col = "red" )
-abline ( v  = Mean_ratios_complete$ML.Mean[2], col = "blue")
+abline (v = Mean_ratios_complete$ML.Mean[52], col = "red" )
+abline ( v  = Mean_ratios_complete$ML.Mean[78], col = "blue")
 
 pdf('~/elif_ires/FIGURES/IRESDistributios_boxplot.pdf' , height=4, width=20)
 par(las=1)
@@ -154,7 +153,7 @@ boxplot (Mean_ratios_complete[,-1], ylab="log10 IRES")
 boxplot(Mean_ratios_complete[,-1], ylab="RankOrder")
 dev.off()
 
-emcv_all = Mean_ratios_complete[228,]
+emcv_all = Mean_ratios_complete[52,]
 compare_to_emcv = function (x)  {
   emcv_comp = x > emcv_all[-1]
   if (any(emcv_comp)) {
@@ -170,11 +169,25 @@ sum(emcv_at_least_one)
 
 ### Greater than EMCV all genes not normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene.pdf', width=8, height=8)
-h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col= colorRampPalette(c("yellow", "blue"))(100), 
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
 dev.off()
+### Greater than EMCV all genes row normalized
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_rownormalized.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col= colorRampPalette(c("yellow", "blue"))(100), 
+                density.info="none", dendrogram="none", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+dev.off()
 
+## HEATMAP OF GENES OF INTEREST
+
+pdf('~/elif_ires/FIGURES/082314_celltype_SelectedGenes.pdf', width=8, height=8)
+selected_rows = as.character(Mean_ratios_complete[,1]) %in% genes_of_interest$V1
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[selected_rows,-c(1,6)] ),
+                col= colorpanel(75,"blue3","white","red2"), density.info="none", dendrogram="none", 
+                scale="row", labRow=Mean_ratios_complete[selected_rows,1], trace="none", cexRow =.5 )
+dev.off()
 ### Greater than EMCV all genes row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
@@ -184,14 +197,23 @@ dev.off()
 
 # EMCV Greater, EB removed, row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
-h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)] ), col=redgreen(75), 
-                density.info="none", dendrogram="none", 
-                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
+rows_to_remove = c(67,68,31,35)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+                distfun = function (x) {dist (x, method = "maximum", diag = FALSE, upper = FALSE, p = 2) }, 
+                hclustfun = function (x) { hclust (x, method = "ward")} ,density.info="none", dendrogram="ro", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 dev.off()
+
+# Assign each gene to one of four categories based on max tissue
+# Normalized values that make up the heatmap h1$carpet
+heat_input = as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,])
+heat_names = Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove]
+
+
 
 # EMCV Greater, EB removed, no normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_noEB.pdf', width=8, height=8)
-h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)] ), col=redgreen(75), 
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)] ), col= colorpanel(75,"blue3","white","red2"), 
                 density.info="none", dendrogram="none", 
                 scale="none", labRow=Mean_ratios_complete[emcv_at_least_one,1], trace="none", cexRow =.5 )
 dev.off()
