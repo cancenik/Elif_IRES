@@ -42,12 +42,22 @@ colnames(ratios) = colnames(firefly)[-1]
 
 
 # Calculate REplicate Correlation using ratios and complete obs
-allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
+allcors = cor ( ratios[,-c(5,6,14,15,22,23)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
-#pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
+pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
 plot(hclust(distance, method="complete"))
-#dev.off()
+dev.off()
+
+#WITHOUT EB
+allcors = cor ( ratios[,-c(5,6,14,15,22:27)], method = "spearman", use = "pairwise.complete.obs")
+dissimilarity <- 1 - cor(allcors)
+distance <- as.dist(dissimilarity)
+pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlationNoEB.pdf', height=5, width=5)
+plot(hclust(distance, method="complete"))
+dev.off()
+#
+
 colSums(is.na(ratios)) / 288
 
 # Decided remove two replicates from Neuron because of clusterin 3-4;
@@ -198,6 +208,7 @@ h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[selected_rows,-c(1,6)]
                 col= colorpanel(75,"blue3","white","red2"), density.info="none", dendrogram="none", 
                 scale="row", labRow=Mean_ratios_complete[selected_rows,1], trace="none", cexRow =.5 )
 dev.off()
+
 ### Greater than EMCV all genes row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
@@ -207,7 +218,7 @@ dev.off()
 
 # EMCV Greater, EB removed, row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
-rows_to_remove = c(52,78)
+rows_to_remove = c(37, 68, 69, 70, 32)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
                 distfun = function (x) {dist (x, method = "maximum", diag = T, upper = T, p = 2) }, 
                 hclustfun = function (x) { hclust (x, method = "ward")} ,density.info="none", dendrogram="ro", 
@@ -232,28 +243,12 @@ heat_dist_min = function ( x) {
   return (as.dist(dist_mat + -min(dist_mat), diag=T, upper=T) ) 
 }
 
-heat_dist_max = function ( x) { 
-  # Needs to be symmetric and zero for diag
-  dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
-  for ( i in 1:dim(x)[1]) {
-    for (j in 1:dim(x)[1]) {
-      dist_mat[i,j] = max ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
-                               x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
-    }
-  }
-  return (as.dist(dist_mat , diag=T, upper=T) ) 
-}
-
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_Canclusterting_row_normalized_noEB.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
                 distfun = heat_dist_min, 
                 hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
                 scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 dev.off()
-h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
-                distfun = heat_dist_max, 
-                hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
-                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 
 
 # EMCV Greater, EB removed, no normalized
@@ -600,5 +595,21 @@ na.dist <- function(x,...) {
 #   outliers= !(r > range[1] | r < range[2])
 #   return(outliers)
 # }
+
+# heat_dist_max = function ( x) { 
+#   # Needs to be symmetric and zero for diag
+#   dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
+#   for ( i in 1:dim(x)[1]) {
+#     for (j in 1:dim(x)[1]) {
+#       dist_mat[i,j] = max ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
+#                                x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
+#     }
+#   }
+#   return (as.dist(dist_mat , diag=T, upper=T) ) 
+# }
+# h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+#                 distfun = heat_dist_max, 
+#                 hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
+#                 scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 
 
