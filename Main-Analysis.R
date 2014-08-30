@@ -53,8 +53,8 @@ colSums(is.na(ratios)) / 288
 # Decided remove two replicates from Neuron because of clusterin 3-4;
 # NSC1-2 > 45% NA so removed
 
-# Removes 4 replicates that are weird
-ratios_refined = ratios[,-c(5,6,14,15)]
+# Removes 6 replicates that are weird
+ratios_refined = ratios[,-c(5,6,14,15,22,23)]
 
 # Rank convert ratios
 my.ecdf = function(x) {ecdf(x)(x)}
@@ -111,13 +111,23 @@ dev.off()
 ### DIFFERENT SECTION
 # Takes mean of ratios without rank normalization
 Mean_ratios = data.frame(ID = renilla[,1], 
-                         ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
-                         NSC.Mean = log10(apply (ratios[,7:12], 1, mean, na.rm=T) ), 
-                         NEU.Mean =  log10(apply (ratios[,c(13,16:18)], 1, mean, na.rm=T) ), 
-                         ML.Mean =  log10(apply (ratios[,19:23], 1, mean, na.rm=T) ),
-                         EB.Mean =  log10(apply (ratios[,24:27], 1, mean, na.rm=T) )
+                         ESC.Mean = apply ( log10(ratios_refined[,1:4]), 1, mean, na.rm=T) , 
+                         NSC.Mean = apply (log10(ratios_refined[,5:9]), 1, mean, na.rm=T) , 
+                         NEU.Mean = apply ( log10(ratios_refined[,10:13]), 1, mean, na.rm=T) , 
+                         ML.Mean =  apply (log10(ratios_refined[,14:17]), 1, mean, na.rm=T) ,
+                         EB.Mean =  apply (log10(ratios_refined[,18:21]), 1, mean, na.rm=T)
+)
+SD_ratios = data.frame(ID = renilla[,1], 
+                       ESC.Mean = apply ( log10(ratios_refined[,1:4]), 1, sd, na.rm=T) , 
+                       NSC.Mean = apply ( log10(ratios_refined[,5:9]), 1, sd, na.rm=T) , 
+                       NEU.Mean =  apply (log10(ratios_refined[,10:13]), 1, sd, na.rm=T) , 
+                       ML.Mean =  apply (log10(ratios_refined[,14:17]), 1, sd, na.rm=T) ,
+                       EB.Mean =  apply ( log10(ratios_refined[,18:21]), 1, sd, na.rm=T) 
 )
 quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
+
+write.csv(Mean_ratios, '~/elif_ires/Elif_DataFiles/083014_Ratio_Mean.csv')
+write.csv (SD_ratios, '~/elif_ires/Elif_DataFiles/083014_Ratio_SD.csv' )
 
 # Ensure at least one measurement per cell type
 Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
@@ -532,7 +542,7 @@ stripchart (apply(hek_ires[,-1],1,mean), vertical="T", method= "jitter")
 ### CALCULATE KAPPA SCORES FOR THE GO TERMS
 go_dag = read.table('~/elif_ires/Elif_DataFiles/0728144_Funcassociate_allMGIIDs_tested.txt_Kappa_Network.sif', header=T)
 # IRES positive of go_dag
-ga_dag = read.table ('~/Google Drive/072914_IRESpositiveGO/funcassociate_results.tsv-6.txt_Kappa_Network.sif', header=T)
+go_dag = read.table ('~/Google Drive/072914_IRESpositiveGO/funcassociate_results.tsv-6.txt_Kappa_Network.sif', header=T)
 # Calculates kappa similarity between two binary vectors 
 calculate_kappa <- function (a1, a2) { 
   Pr_a = sum (!xor(a1,a2)) / length(a1)
@@ -558,7 +568,7 @@ for ( i in 1:dim(go_dag)[1]) {
 save (first_kappas, file="first_kappas_i4_j198")
 load (file="first_kappas_i4_j198")
 #write(first_kappas, file = paste(go_dag_joint, "modified", sep="_"))
-
+write(first_kappas, file = paste(go_dag, "modified", sep="_"))
 
 
 
