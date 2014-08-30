@@ -207,7 +207,7 @@ dev.off()
 
 # EMCV Greater, EB removed, row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
-rows_to_remove = c(67,68,31,35)
+rows_to_remove = c(52,78)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
                 distfun = function (x) {dist (x, method = "maximum", diag = T, upper = T, p = 2) }, 
                 hclustfun = function (x) { hclust (x, method = "ward")} ,density.info="none", dendrogram="ro", 
