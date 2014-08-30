@@ -152,13 +152,13 @@ plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
 abline (v = Mean_ratios_complete$ML.Mean[52], col = "red" )
 abline ( v  = Mean_ratios_complete$ML.Mean[78], col = "blue")
 
-pdf('~/elif_ires/FIGURES/IRESDistributios_boxplot.pdf' , height=4, width=20)
+pdf('~/elif_ires/FIGURES/IRESDistributions_boxplot.pdf' , height=4, width=20)
 par(las=1)
 par(mfrow=c(1,2))
 boxplot (Mean_ratios_complete[,-1], ylab="log10 IRES")
 
 ## Uncomment below line to use rank normalized data. 
-### Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+## Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
 
 boxplot(Mean_ratios_complete[,-1], ylab="RankOrder")
 dev.off()
