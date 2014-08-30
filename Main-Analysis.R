@@ -199,16 +199,51 @@ dev.off()
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
 rows_to_remove = c(67,68,31,35)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
-                distfun = function (x) {dist (x, method = "maximum", diag = FALSE, upper = FALSE, p = 2) }, 
+                distfun = function (x) {dist (x, method = "maximum", diag = T, upper = T, p = 2) }, 
                 hclustfun = function (x) { hclust (x, method = "ward")} ,density.info="none", dendrogram="ro", 
                 scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 dev.off()
 
-# Assign each gene to one of four categories based on max tissue
-# Normalized values that make up the heatmap h1$carpet
+#Create new distance matrix all-by-all
+# Take max of each and find difference and take min
 heat_input = as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,])
 heat_names = Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove]
+heat_input_scaled = t( apply ( heat_input, 1 , scale))
+# X is the input matrix
+heat_dist_min = function ( x) { 
+  # Needs to be symmetric and zero for diag
+  dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
+  for ( i in 1:dim(x)[1]) {
+    for (j in 1:dim(x)[1]) {
+      dist_mat[i,j] = min ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
+                               x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
+    }
+  }
+  return (as.dist(dist_mat + -min(dist_mat), diag=T, upper=T) ) 
+}
 
+heat_dist_max = function ( x) { 
+  # Needs to be symmetric and zero for diag
+  dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
+  for ( i in 1:dim(x)[1]) {
+    for (j in 1:dim(x)[1]) {
+      dist_mat[i,j] = max ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
+                               x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
+    }
+  }
+  return (as.dist(dist_mat , diag=T, upper=T) ) 
+}
+
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_Canclusterting_row_normalized_noEB.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+                distfun = heat_dist_min, 
+                hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
+dev.off()
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+                distfun = heat_dist_max, 
+                hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 
 
 # EMCV Greater, EB removed, no normalized
@@ -496,6 +531,8 @@ stripchart (apply(hek_ires[,-1],1,mean), vertical="T", method= "jitter")
 
 ### CALCULATE KAPPA SCORES FOR THE GO TERMS
 go_dag = read.table('~/elif_ires/Elif_DataFiles/0728144_Funcassociate_allMGIIDs_tested.txt_Kappa_Network.sif', header=T)
+# IRES positive of go_dag
+ga_dag = read.table ('~/Google Drive/072914_IRESpositiveGO/funcassociate_results.tsv-6.txt_Kappa_Network.sif', header=T)
 # Calculates kappa similarity between two binary vectors 
 calculate_kappa <- function (a1, a2) { 
   Pr_a = sum (!xor(a1,a2)) / length(a1)
