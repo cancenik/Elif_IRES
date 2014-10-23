@@ -42,19 +42,29 @@ colnames(ratios) = colnames(firefly)[-1]
 
 
 # Calculate REplicate Correlation using ratios and complete obs
-allcors = cor ( ratios[,-c(5,6,14,15)], method = "spearman", use = "pairwise.complete.obs")
+allcors = cor ( ratios[,-c(5,6,14,15,22,23)], method = "spearman", use = "pairwise.complete.obs")
 dissimilarity <- 1 - cor(allcors)
 distance <- as.dist(dissimilarity)
-#pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
+pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlation.pdf', height=5, width=5)
 plot(hclust(distance, method="complete"))
-#dev.off()
+dev.off()
+
+#WITHOUT EB
+allcors = cor ( ratios[,-c(5,6,14,15,22:27)], method = "spearman", use = "pairwise.complete.obs")
+dissimilarity <- 1 - cor(allcors)
+distance <- as.dist(dissimilarity)
+pdf('~/elif_ires/FIGURES/Replicate_hierarchicalCluster_completelinkage_correlationNoEB.pdf', height=5, width=5)
+plot(hclust(distance, method="complete"))
+dev.off()
+#
+
 colSums(is.na(ratios)) / 288
 
 # Decided remove two replicates from Neuron because of clusterin 3-4;
 # NSC1-2 > 45% NA so removed
 
-# Removes 4 replicates that are weird
-ratios_refined = ratios[,-c(5,6,14,15)]
+# Removes 6 replicates that are weird
+ratios_refined = ratios[,-c(5,6,14,15,22,23)]
 
 # Rank convert ratios
 my.ecdf = function(x) {ecdf(x)(x)}
@@ -111,13 +121,23 @@ dev.off()
 ### DIFFERENT SECTION
 # Takes mean of ratios without rank normalization
 Mean_ratios = data.frame(ID = renilla[,1], 
-                         ESC.Mean = log10(apply (ratios[,1:4], 1, mean, na.rm=T) ), 
-                         NSC.Mean = log10(apply (ratios[,7:12], 1, mean, na.rm=T) ), 
-                         NEU.Mean =  log10(apply (ratios[,c(13,16:18)], 1, mean, na.rm=T) ), 
-                         ML.Mean =  log10(apply (ratios[,19:23], 1, mean, na.rm=T) ),
-                         EB.Mean =  log10(apply (ratios[,24:27], 1, mean, na.rm=T) )
+                         ESC.Mean = apply ( log10(ratios_refined[,1:4]), 1, mean, na.rm=T) , 
+                         NSC.Mean = apply (log10(ratios_refined[,5:9]), 1, mean, na.rm=T) , 
+                         NEU.Mean = apply ( log10(ratios_refined[,10:13]), 1, mean, na.rm=T) , 
+                         ML.Mean =  apply (log10(ratios_refined[,14:17]), 1, mean, na.rm=T) ,
+                         EB.Mean =  apply (log10(ratios_refined[,18:21]), 1, mean, na.rm=T)
+)
+SD_ratios = data.frame(ID = renilla[,1], 
+                       ESC.Mean = apply ( log10(ratios_refined[,1:4]), 1, sd, na.rm=T) , 
+                       NSC.Mean = apply ( log10(ratios_refined[,5:9]), 1, sd, na.rm=T) , 
+                       NEU.Mean =  apply (log10(ratios_refined[,10:13]), 1, sd, na.rm=T) , 
+                       ML.Mean =  apply (log10(ratios_refined[,14:17]), 1, sd, na.rm=T) ,
+                       EB.Mean =  apply ( log10(ratios_refined[,18:21]), 1, sd, na.rm=T) 
 )
 quantile(apply(is.na(Mean_ratios), 1, sum), seq ( 0,1,.1) )
+
+write.csv(Mean_ratios, '~/elif_ires/Elif_DataFiles/083014_Ratio_Mean.csv')
+write.csv (SD_ratios, '~/elif_ires/Elif_DataFiles/083014_Ratio_SD.csv' )
 
 # Ensure at least one measurement per cell type
 Mean_ratios_complete = Mean_ratios[apply(is.na(Mean_ratios), 1, sum) == 0, ]
@@ -142,13 +162,13 @@ plot(density(Mean_ratios_complete$ML.Mean), main = "Mesenchyme")
 abline (v = Mean_ratios_complete$ML.Mean[52], col = "red" )
 abline ( v  = Mean_ratios_complete$ML.Mean[78], col = "blue")
 
-pdf('~/elif_ires/FIGURES/IRESDistributios_boxplot.pdf' , height=4, width=20)
+pdf('~/elif_ires/FIGURES/IRESDistributions_boxplot.pdf' , height=4, width=20)
 par(las=1)
 par(mfrow=c(1,2))
 boxplot (Mean_ratios_complete[,-1], ylab="log10 IRES")
 
 ## Uncomment below line to use rank normalized data. 
-### Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
+## Mean_ratios_complete[,2:6] = apply(Mean_ratios_complete[,2:6], 2, my.ecdf)
 
 boxplot(Mean_ratios_complete[,-1], ylab="RankOrder")
 dev.off()
@@ -188,6 +208,7 @@ h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[selected_rows,-c(1,6)]
                 col= colorpanel(75,"blue3","white","red2"), density.info="none", dendrogram="none", 
                 scale="row", labRow=Mean_ratios_complete[selected_rows,1], trace="none", cexRow =.5 )
 dev.off()
+
 ### Greater than EMCV all genes row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized.pdf', width=8, height=8)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-1] ), col=redgreen(75), 
@@ -197,18 +218,37 @@ dev.off()
 
 # EMCV Greater, EB removed, row normalized
 pdf('~/elif_ires/FIGURES/082314_celltype_Gene_row_normalized_noEB.pdf', width=8, height=8)
-rows_to_remove = c(67,68,31,35)
+rows_to_remove = c(37, 68, 69, 70, 32)
 h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
-                distfun = function (x) {dist (x, method = "maximum", diag = FALSE, upper = FALSE, p = 2) }, 
+                distfun = function (x) {dist (x, method = "maximum", diag = T, upper = T, p = 2) }, 
                 hclustfun = function (x) { hclust (x, method = "ward")} ,density.info="none", dendrogram="ro", 
                 scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 dev.off()
 
-# Assign each gene to one of four categories based on max tissue
-# Normalized values that make up the heatmap h1$carpet
+#Create new distance matrix all-by-all
+# Take max of each and find difference and take min
 heat_input = as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,])
 heat_names = Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove]
+heat_input_scaled = t( apply ( heat_input, 1 , scale))
+# X is the input matrix
+heat_dist_min = function ( x) { 
+  # Needs to be symmetric and zero for diag
+  dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
+  for ( i in 1:dim(x)[1]) {
+    for (j in 1:dim(x)[1]) {
+      dist_mat[i,j] = min ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
+                               x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
+    }
+  }
+  return (as.dist(dist_mat + -min(dist_mat), diag=T, upper=T) ) 
+}
 
+pdf('~/elif_ires/FIGURES/082314_celltype_Gene_Canclusterting_row_normalized_noEB.pdf', width=8, height=8)
+h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+                distfun = heat_dist_min, 
+                hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
+                scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
+dev.off()
 
 
 # EMCV Greater, EB removed, no normalized
@@ -496,6 +536,8 @@ stripchart (apply(hek_ires[,-1],1,mean), vertical="T", method= "jitter")
 
 ### CALCULATE KAPPA SCORES FOR THE GO TERMS
 go_dag = read.table('~/elif_ires/Elif_DataFiles/0728144_Funcassociate_allMGIIDs_tested.txt_Kappa_Network.sif', header=T)
+# IRES positive of go_dag
+go_dag = read.table ('~/Google Drive/072914_IRESpositiveGO/funcassociate_results.tsv-6.txt_Kappa_Network.sif', header=T)
 # Calculates kappa similarity between two binary vectors 
 calculate_kappa <- function (a1, a2) { 
   Pr_a = sum (!xor(a1,a2)) / length(a1)
@@ -521,7 +563,7 @@ for ( i in 1:dim(go_dag)[1]) {
 save (first_kappas, file="first_kappas_i4_j198")
 load (file="first_kappas_i4_j198")
 #write(first_kappas, file = paste(go_dag_joint, "modified", sep="_"))
-
+write(first_kappas, file = paste(go_dag, "modified", sep="_"))
 
 
 
@@ -553,5 +595,21 @@ na.dist <- function(x,...) {
 #   outliers= !(r > range[1] | r < range[2])
 #   return(outliers)
 # }
+
+# heat_dist_max = function ( x) { 
+#   # Needs to be symmetric and zero for diag
+#   dist_mat = matrix (nrow = dim(x)[1], ncol = dim(x)[1])
+#   for ( i in 1:dim(x)[1]) {
+#     for (j in 1:dim(x)[1]) {
+#       dist_mat[i,j] = max ( c (x[i , which.max(x[i,])] - x[j, which.max(x[i,])] , 
+#                                x[j, which.max(x[j,])] - x[i, which.max(x[j,])]  ) ) 
+#     }
+#   }
+#   return (as.dist(dist_mat , diag=T, upper=T) ) 
+# }
+# h1 = heatmap.2 (cexCol=.5, as.matrix(Mean_ratios_complete[emcv_at_least_one,-c(1,6)][-rows_to_remove,] ), col= colorpanel(75,"blue3","white","red2"), 
+#                 distfun = heat_dist_max, 
+#                 hclustfun = function (x) { hclust (x, method = "complete")} ,density.info="none", dendrogram="ro", 
+#                 scale="row", labRow=Mean_ratios_complete[emcv_at_least_one,1][-rows_to_remove] , trace="none", cexRow =.5 )
 
 
